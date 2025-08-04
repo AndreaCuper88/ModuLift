@@ -13,7 +13,7 @@ export default function LoginDropdown() {
 
     useEffect(() => {
         const handler = (e) => {
-            if (menuRef.current && !menuRef.current.contains(e.target)) {
+            if (menuRef.current) {
                 setOpen(false);
             }
         };
@@ -62,7 +62,7 @@ const handleLogin = (e) => {}
 
                     <div className="text-sm text-center mt-4">
                         <span className="text-gray-600">Non sei registrato? </span>
-                        <Link to="/register" className="text-blue-600 hover:underline">
+                        <Link to="/register" className="text-blue-600 hover:underline" onClick={() => setOpen(false)}>
                             Registrati ora!
                         </Link>
                     </div>
