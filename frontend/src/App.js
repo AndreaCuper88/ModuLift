@@ -7,6 +7,7 @@ import Footer from "./components/Footer.jsx";
 
 //Import pagine
 import HomePage from "./pages/HomePage.jsx";
+import RegisterPage from "./pages/Register.jsx";
 
 export default function App() {
     return (
@@ -14,6 +15,7 @@ export default function App() {
             <Navbar />
             <Routes>
                 <Route path="/" element={<HomePage />} />
+                <Route path="/register" element={<RegisterPage />} />
             </Routes>
             <Footer />
         </BrowserRouter>

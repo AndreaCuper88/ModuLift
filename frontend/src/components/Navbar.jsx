@@ -1,7 +1,7 @@
 import React,{useState} from "react";
 import { Link } from 'react-router-dom';
 import logo from '../assets/ModuLift_Logo.png';
-import userLogo from '../assets/User_Logo.png';
+import LoginDropdown from '../components/LoginDropdown';
 
 
 export default function Navbar() {
@@ -99,17 +99,8 @@ export default function Navbar() {
                             </svg>
                         </button>
 
-                        {/* Profile dropdown - sostituire con logica React o libreria dropdown */}
                         <div className="relative ml-3">
-                            <button className="relative flex rounded-full text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-800">
-                                <span className="absolute -inset-1.5"></span>
-                                <span className="sr-only">Open user menu</span>
-                                <img
-                                    className="size-8 rounded-full"
-                                    src={userLogo}
-                                    alt="UserLogo"
-                                />
-                            </button>
+                            <LoginDropdown />
                         </div>
                     </div>
                 </div>
