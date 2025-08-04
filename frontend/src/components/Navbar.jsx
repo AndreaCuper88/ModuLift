@@ -1,4 +1,5 @@
 import React,{useState} from "react";
+import { Link } from 'react-router-dom';
 import logo from '../assets/ModuLift_Logo.png';
 import userLogo from '../assets/User_Logo.png';
 
@@ -34,13 +35,15 @@ export default function Navbar() {
                     </div>
 
                     <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
-                        <div className="flex shrink-0 items-center">
-                            <img
-                                className="h-10 w-auto"
-                                src={logo}
-                                alt="Modu Lift Logo"
-                            />
-                        </div>
+                        <Link to="/">
+                            <div className="flex shrink-0 items-center">
+                                <img
+                                    className="h-10 w-auto"
+                                    src={logo}
+                                    alt="Modu Lift Logo"
+                                />
+                            </div>
+                        </Link>
                         <div className="hidden sm:ml-6 sm:block">
                             <div className="flex space-x-4">
                                 <a
