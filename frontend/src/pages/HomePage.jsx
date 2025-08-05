@@ -15,7 +15,7 @@ export default function HomePage() {
                 }}
             ></div>
 
-            <div className="relative z-10 mx-auto px-6 py-20 flex flex-col lg:flex-row items-left">
+            <div className="relative z-10 px-6 py-20 flex flex-col lg:flex-row items-left">
                 <div className="w-full md:w-1/2 text-left">
                     <h1 className="text-5xl font-extrabold text-black mb-4">
                         Benvenuto su <br />
