@@ -6,7 +6,7 @@ import useAuth from "../hooks/useAuth";
 import UserMenu from "../components/UserMenu";
 
 
-export default function Navbar() {
+export default function Navbar({setAlert}) {
     const { auth } = useAuth();
 
     const [isOpen, setIsOpen] = useState(false);
@@ -104,7 +104,7 @@ export default function Navbar() {
                         </button>
 
                         <div className="relative ml-3">
-                            {auth.user ? <UserMenu /> : <LoginDropdown />}
+                            {auth.user ? <UserMenu setAlert={setAlert} /> : <LoginDropdown setAlert={setAlert} />}
                         </div>
                     </div>
                 </div>

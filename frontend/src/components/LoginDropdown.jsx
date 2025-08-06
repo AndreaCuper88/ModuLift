@@ -5,7 +5,7 @@ import useAuth from "../hooks/useAuth";
 import userLogo from '../assets/User_Logo.png';
 
 
-export default function LoginDropdown() {
+export default function LoginDropdown({setAlert}) {
     const [open, setOpen] = useState(false);
     const menuRef = useRef(null);
 
@@ -34,6 +34,7 @@ export default function LoginDropdown() {
             setOpen(false);
             setEmail("");
             setPassword("");
+            setAlert({message: "Login effettuato con successo!!!", type: "success"});
         } catch (error) {
             console.log(error);
             setError("Credenziali non valide o errore di rete.");
