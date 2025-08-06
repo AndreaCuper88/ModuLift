@@ -6,6 +6,9 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN;
 
+//Importazione Rotte
+const userRoutes = require('./routers/userRouter');
+
 //Connessione al db
 connectDB().then(async () => console.log('Connesso a MongoDB!!!'));
 
@@ -17,9 +20,8 @@ app.use(cors({ //Permetto le richieste da parte del frontend
 ))
 app.use(express.json()); //Permette di leggere json nel body delle richieste
 
-app.get('/', (req, res) => {
-    res.send('Backend ModuLift attivo!');
-});
+//Rotte API
+app.use('/api/user', userRoutes);
 
 app.listen(PORT, () => {
     console.log(`Server avviato su http://localhost:${PORT}`);
