@@ -5,7 +5,7 @@ import userLogo from '../assets/User_Logo.png';
 
 export default function LoginDropdown() {
     const [open, setOpen] = useState(false);
-    const menuRef = useRef();
+    const menuRef = useRef(null);
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -13,7 +13,7 @@ export default function LoginDropdown() {
 
     useEffect(() => {
         const handler = (e) => {
-            if (menuRef.current) {
+            if (menuRef.current && !menuRef.current.contains(e.target)) {
                 setOpen(false);
             }
         };

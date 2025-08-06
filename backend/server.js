@@ -21,7 +21,7 @@ app.use(cors({ //Permetto le richieste da parte del frontend
 app.use(express.json()); //Permette di leggere json nel body delle richieste
 
 //Rotte API
-app.use('/api/user', userRoutes);
+app.use('/api/users', userRoutes);
 
 app.listen(PORT, () => {
     console.log(`Server avviato su http://localhost:${PORT}`);

@@ -19,6 +19,7 @@ exports.createUser = async (req, res) => {
         }
         const newUser = new Utente({username, email, password, nome, cognome, dataNascita, sesso});
         await newUser.save();
+        res.status(201).json({ message: "Utente creato con successo" });
     } catch (e) {
         console.error(e);
         res.status(500).send({errore: 'Errore nella creazione utente'})
