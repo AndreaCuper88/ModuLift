@@ -1,5 +1,7 @@
 import {Link} from "react-router-dom";
 import {useEffect, useRef, useState} from "react";
+import useAuth from "../hooks/useAuth";
+
 import userLogo from '../assets/User_Logo.png';
 
 
@@ -11,6 +13,8 @@ export default function LoginDropdown() {
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
 
+    const { login } = useAuth();
+
     useEffect(() => {
         const handler = (e) => {
             if (menuRef.current && !menuRef.current.contains(e.target)) {
@@ -21,7 +25,20 @@ export default function LoginDropdown() {
         return () => document.removeEventListener("mousedown", handler);
     },[]);
 
-const handleLogin = (e) => {}
+    const handleLogin = async (e) => {
+        e.preventDefault();
+        setError("");
+
+        try {
+            await login(email, password);
+            setOpen(false);
+            setEmail("");
+            setPassword("");
+        } catch (error) {
+            console.log(error);
+            setError("Credenziali non valide o errore di rete.");
+        }
+    }
     return (
         <div className="relative" ref={menuRef}>
             <button

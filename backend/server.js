@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 require('dotenv').config();
 const connectDB = require('./config/db');
 const app = express();
@@ -19,6 +20,7 @@ app.use(cors({ //Permetto le richieste da parte del frontend
     }
 ))
 app.use(express.json()); //Permette di leggere json nel body delle richieste
+app.use(cookieParser()); //Per poter utilizzare cookie HTTP only
 
 //Rotte API
 app.use('/api/users', userRoutes);

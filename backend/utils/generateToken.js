@@ -15,3 +15,5 @@ const generaToken = (idUtente) => {
     );
     return {accessToken, refreshToken};
 }
+
+module.exports = generaToken;

@@ -26,3 +26,63 @@ exports.createUser = async (req, res) => {
         //500 Internal Server Error
     }
 }
+
+exports.login = async (req, res) => {
+    const {email, password} = req.body;
+
+    try {
+        const user = await Utente.findOne({email});
+        if (!user || !user.comparePassword(password)) {
+            return res.status(401).json({dettagli: "Email o pasword non validi!!!"})
+        }
+
+        const {accessToken, refreshToken} =  generateToken(user._id);    //Richiamo la funzione per generare i due tokens
+
+        await RefreshToken.create({token: refreshToken, userId: user._id}); //Salvo il refresh token generato nel db
+
+        //imposto il refreshToken in un cookie
+        res.cookie('jwt', refreshToken, {
+            httpOnly: true, //non può essere letto da javascript nel browser, solo il server può accedervi mediante req.cookies
+            sameSite: 'Strict', //Cookie non leggibile da altre web app, possibile solo se la richiesta proviene dallo stesso dominio
+            maxAge: 7 * 24 * 60 * 60 * 1000, // Scadenza 7 giorni (in millisecondi)
+            secure: false
+        });
+
+        res.status(200).json({
+            user: {
+                id: user._id,
+                username: user.username,
+                email: user.email
+            },
+            accessToken: accessToken,
+        });
+    } catch (e) {
+        console.error("Errore nel login: ",e);
+        res.status(500).json({errore: 'Errore nel login'});
+    }
+}
+
+exports.logout = async (req, res) => {
+    try {
+        const refreshToken = req.cookies.jwt;
+
+        if (!refreshToken) {
+            return res.status(400).json({ messaggio: "Token non trovato" });
+            //400 Bad Request
+        }
+
+        await RefreshToken.deleteOne({token: refreshToken});    //Cancello il refresh token dal db
+
+        //Cancello il cookie
+        res.clearCookie("jwt", {
+            httpOnly: true,
+            sameSite: 'Strict',
+            secure: false
+        });
+
+        res.status(200).json({ message: "Logout effettuato con successo" });
+    } catch (e) {
+        console.error("Errore durante il logout: ",e);
+        res.status(500).json({errore: 'Errore interno del server'});
+    }
+}

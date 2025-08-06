@@ -2,9 +2,13 @@ import React,{useState} from "react";
 import { Link } from 'react-router-dom';
 import logo from '../assets/ModuLift_Logo.png';
 import LoginDropdown from '../components/LoginDropdown';
+import useAuth from "../hooks/useAuth";
+import UserMenu from "../components/UserMenu";
 
 
 export default function Navbar() {
+    const { auth } = useAuth();
+
     const [isOpen, setIsOpen] = useState(false);
 
     return (
@@ -100,7 +104,7 @@ export default function Navbar() {
                         </button>
 
                         <div className="relative ml-3">
-                            <LoginDropdown />
+                            {auth.user ? <UserMenu /> : <LoginDropdown />}
                         </div>
                     </div>
                 </div>
