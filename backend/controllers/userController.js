@@ -86,3 +86,34 @@ exports.logout = async (req, res) => {
         res.status(500).json({errore: 'Errore interno del server'});
     }
 }
+
+exports.refreshToken = async (req, res) => {
+    try {
+        //Recupero il refreshToken dal cookie
+        const refreshToken = req.cookies.jwt;
+
+        if (!refreshToken) {
+            res.status(401).json({dettagli: "Refresh Token mancante"});
+        }
+
+        //Verifico che il token sia ancora nel db
+        const tokenDb = await RefreshToken.findOne({token: refreshToken});
+        if (!tokenDb) {
+            return res.status(403).json({dettagli: "Refresh Token non riconosciuto"});
+        }
+
+        //Verifico il refresh token
+        jwt.verify(refreshToken, process.env.JWT_SECRET, (err, decoded) => {
+            if (err) {
+                return res.status(403).json({dettagli: "Refresh Token scaduto o invalido"});
+            }
+
+            const { accessToken } = generateToken(decoded.id, true);
+
+            return res.json({ accessToken });
+        });
+    } catch (err) {
+        console.error("Errore nel refresh del token: ",err);
+        return res.status(500).json({errore: 'Errore interno del server'});
+    }
+}

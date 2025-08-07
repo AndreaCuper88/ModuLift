@@ -11,7 +11,12 @@ import HomePage from "./pages/HomePage.jsx";
 import RegisterPage from "./pages/Register.jsx";
 import {useEffect, useState} from "react";
 
+//Import custom hooks
+import useAuth from "../src/hooks/useAuth";
+
 export default function App() {
+    const { logout } = useAuth();
+    //Gestione alert globale
     const [alert, setAlert] = useState({message: '', type: ''});
 
     useEffect(() => {   //Lo chiudo automaticamente dopo 5 secondi
@@ -22,6 +27,19 @@ export default function App() {
             return () => clearTimeout(timer);
         }
     },[alert]);
+    //Fine gestione alert globale
+
+    useEffect(() => {
+        const handleLogout = () => {
+            logout();
+        };
+
+        window.addEventListener("forceLogout", handleLogout); //Ascolto l'evento forceLogout
+
+        return () => {
+            window.removeEventListener("forceLogout", handleLogout);
+        };
+    }, []);
 
     return (
         <BrowserRouter>
