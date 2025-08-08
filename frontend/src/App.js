@@ -1,21 +1,22 @@
-import {BrowserRouter, Route, Routes} from 'react-router-dom';
+import {BrowserRouter} from 'react-router-dom';
 import './App.css';
+import {useEffect, useState} from "react";
 
 //Import componenti
 import Navbar from "./components/Navbar.jsx";
 import Footer from "./components/Footer.jsx";
 import Alert from './components/SimpleAlert';
 
-//Import pagine
-import HomePage from "./pages/HomePage.jsx";
-import RegisterPage from "./pages/Register.jsx";
-import {useEffect, useState} from "react";
+//Import routers
+import AdminRoutes from "./routes/AdminRoutes";
+import ClienteRoutes from "./routes/ClientiRoutes";
+import PublicRoutes from "./routes/PublicRoutes";
 
 //Import custom hooks
 import useAuth from "../src/hooks/useAuth";
 
 export default function App() {
-    const { logout } = useAuth();
+    const { auth } = useAuth();
     //Gestione alert globale
     const [alert, setAlert] = useState({message: '', type: ''});
 
@@ -31,7 +32,7 @@ export default function App() {
 
     useEffect(() => {
         const handleLogout = () => {
-            logout();
+            auth.logout();
         };
 
         window.addEventListener("forceLogout", handleLogout); //Ascolto l'evento forceLogout
@@ -53,10 +54,9 @@ export default function App() {
                 )}
                 <Navbar setAlert={setAlert} />
                 <main className="flex-grow"> {/* forzo il main crescere e quindi riempire lo spazio tra navbar e footer */}
-                    <Routes>
-                        <Route path="/" element={<HomePage />} />
-                        <Route path="/register" element={<RegisterPage />} />
-                    </Routes>
+                    <PublicRoutes />
+                    <AdminRoutes />
+                    <ClienteRoutes />
                 </main>
                 <Footer />
             </div>

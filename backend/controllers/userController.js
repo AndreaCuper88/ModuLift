@@ -36,7 +36,7 @@ exports.login = async (req, res) => {
             return res.status(401).json({dettagli: "Email o pasword non validi!!!"})
         }
 
-        const {accessToken, refreshToken} =  generateToken(user._id);    //Richiamo la funzione per generare i due tokens
+        const {accessToken, refreshToken} =  generateToken(user._id, user.ruolo);    //Richiamo la funzione per generare i due tokens
 
         await RefreshToken.create({token: refreshToken, userId: user._id}); //Salvo il refresh token generato nel db
 
@@ -52,7 +52,8 @@ exports.login = async (req, res) => {
             user: {
                 id: user._id,
                 username: user.username,
-                email: user.email
+                email: user.email,
+                ruolo: user.ruolo
             },
             accessToken: accessToken,
         });

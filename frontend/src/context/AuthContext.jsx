@@ -20,6 +20,7 @@ export const AuthProvider = ({ children }) => {
             setAuth({user, accessToken});
 
             localStorage.setItem("accessToken",accessToken);
+            localStorage.setItem("user", JSON.stringify(user));
         } catch (e) {
             console.error("Errore durante il login: ",e);
         }
@@ -38,10 +39,20 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         const accessToken = localStorage.getItem("accessToken");
-        if (accessToken) {
-            setAuth(prev => ({ ...prev, accessToken }));
+        const storedUser = localStorage.getItem("user");
+
+        if (accessToken && storedUser) {
+            try {
+                const user = JSON.parse(storedUser);
+                setAuth({ user, accessToken });
+            } catch (e) {
+                console.error("Errore nel parsing dell'utente:", e);
+                localStorage.removeItem("accessToken");
+                localStorage.removeItem("user");
+            }
         }
     }, []);
+
 
     //Quindi fornisco un componente con i dati del contesto accessibili ai figli
     return (

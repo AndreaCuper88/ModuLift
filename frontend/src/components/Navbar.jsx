@@ -50,20 +50,24 @@ export default function Navbar({setAlert}) {
                         </Link>
                         <div className="hidden sm:ml-6 sm:block">
                             <div className="flex space-x-4">
-                                <a
-                                    href="#"
+                                <Link
+                                    to="/dashboard"
                                     className="rounded-md px-3 py-2 text-base font-medium text-black hover:text-gray-700"
-                                    aria-current="page"
                                 >
                                     Dashboard
-                                </a>
+                                </Link>
 
-                                <a
-                                    href="#"
-                                    className="rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-                                >
-                                    Team
-                                </a>
+                                {auth.user.ruolo === 'admin' && (
+                                    <Link
+                                        to="/admin/clienti"
+                                        className="rounded-md px-3 py-2 text-base font-medium text-black hover:text-gray-700"
+                                    >
+                                        Clienti
+                                    </Link>
+                                )
+
+                                }
+
                                 <a
                                     href="#"
                                     className="rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
