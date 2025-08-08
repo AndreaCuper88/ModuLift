@@ -9,6 +9,7 @@ const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN;
 
 //Importazione Rotte
 const userRoutes = require('./routers/userRouter');
+const clienteRouterAdmin = require('./routers/clienteRouter_Admin');
 
 //Connessione al db
 connectDB().then(async () => console.log('Connesso a MongoDB!!!'));
@@ -24,6 +25,7 @@ app.use(cookieParser()); //Per poter utilizzare cookie HTTP only
 
 //Rotte API
 app.use('/api/users', userRoutes);
+app.use('/api/clienti', clienteRouterAdmin);
 
 app.listen(PORT, () => {
     console.log(`Server avviato su http://localhost:${PORT}`);
