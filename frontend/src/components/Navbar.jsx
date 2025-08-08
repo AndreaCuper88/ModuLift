@@ -57,16 +57,15 @@ export default function Navbar({setAlert}) {
                                     Dashboard
                                 </Link>
 
-                                {auth.user.ruolo === 'admin' && (
+                                {auth.user?.ruolo === 'admin' && (
                                     <Link
                                         to="/admin/clienti"
                                         className="rounded-md px-3 py-2 text-base font-medium text-black hover:text-gray-700"
                                     >
                                         Clienti
                                     </Link>
-                                )
+                                )}
 
-                                }
 
                                 <a
                                     href="#"
