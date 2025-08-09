@@ -94,15 +94,19 @@ export default function GestioneClienti() {
             <h1 className="text-4xl font-bold mb-8 text-center text-gray-800 dark:text-black">Gestione Clienti</h1>
 
             {/* Barra di ricerca */}
-            <div className="mb-8">
+            <div className="mb-8 sticky top-4 bg-transparent z-10">
                 <input
                     type="text"
                     placeholder="🔍 Cerca per nome o email..."
-                    className="w-full px-5 py-3 rounded-xl border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-800 dark:text-white shadow-sm"
+                    className="w-full px-5 py-3 rounded-xl border border-gray-300 dark:border-gray-600
+                   focus:outline-none focus:ring-2 focus:ring-blue-500
+                   bg-white dark:bg-gray-900 text-gray-800 dark:text-white shadow-sm"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                 />
             </div>
+
+
 
             {/* Lista clienti */}
             <div className="space-y-6">

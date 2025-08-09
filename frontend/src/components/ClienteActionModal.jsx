@@ -42,7 +42,7 @@ export default function ClienteActionModal({
                     >
                         <div className="font-medium">Disattiva utente</div>
                         <div className="text-sm text-gray-600">
-                            Resta nel DB con <strong>attivo = false</strong>.
+                            Resta in memoria <strong>senza perdita di dati</strong>.
                         </div>
                     </button>
 

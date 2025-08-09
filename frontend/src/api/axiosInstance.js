@@ -48,7 +48,7 @@ axiosInstance.interceptors.response.use(
                     failedQueue.push({
                         resolve: (token) => {
                             //Quando ricevo il nuovo token aggiorno l'Authorization header della richiesta originale
-                            originalRequest.headers['Authorization'] = 'Barer ' + token;
+                            originalRequest.headers['Authorization'] = 'Bearer ' + token;
                             resolve(axiosInstance(originalRequest));
                         },
                         reject: (error) => {
@@ -71,8 +71,10 @@ axiosInstance.interceptors.response.use(
                 // Prendo il nuovo access token dalla risposta
                 const newAccessToken = res.data.accessToken;
 
+                localStorage.setItem('accessToken', newAccessToken);
+
                 // Aggiorno l’header Authorization di default per tutte le nuove richieste
-                axiosInstance.defaults.headers['Authorization'] = 'Bearer ' + newAccessToken;
+                axiosInstance.defaults.headers.common['Authorization'] = 'Bearer ' + newAccessToken;
 
                 // Risolvo tutte le richieste in coda con il nuovo token
                 processQueue(null, newAccessToken);

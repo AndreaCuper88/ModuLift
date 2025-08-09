@@ -17,7 +17,7 @@ router.get(
 //Patch serve per aggiornare parzialmente una risorsa, invio solo i campi che voglio modificare
 router.patch(
     '/:id/disable',
-    //verifyToken,
+    verifyToken,
     //requireRoles('admin'),
     clienteController.disableCliente
 );
@@ -33,7 +33,7 @@ router.patch(
 // [DELETE] /api/clienti/:id/delete → Elimina definitivamente un cliente
 router.delete(
     '/:id/delete',
-    //verifyToken,
+    verifyToken,
     //requireRoles('admin'),
     clienteController.deleteCliente
 );

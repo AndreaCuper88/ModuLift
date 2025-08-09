@@ -14,6 +14,8 @@ const verifyToken = (req, res, next) => {
 
     try {
         req.user = jwt.verify(token, process.env.JWT_SECRET);
+        console.log(process.env.JWT_SECRET);
+
         //req è un oggetto condiviso quindi il middleware successivo
         //avrà a disposizione req.user e potrà verificare chi ha fatto la richiesta
         next();
