@@ -1,7 +1,7 @@
 const express = require('express');
 const clienteController = require("../controllers/clienteController_Admin");
-const verifyToken = require('../middlewares/verifyToken');       // se già creato
-//const requireRoles = require('../middlewares/requireRoles');     // es: requireRoles('admin')
+const verifyToken = require('../middlewares/verifyToken');
+const requireRoles = require('../middlewares/requireRoles');
 
 const router = express.Router();
 
@@ -9,7 +9,7 @@ const router = express.Router();
 router.get(
     '/getClienti',
     verifyToken,
-    //requireRoles('admin'),
+    requireRoles('admin'),
     clienteController.getClienti
 );
 
@@ -18,7 +18,7 @@ router.get(
 router.patch(
     '/:id/disable',
     verifyToken,
-    //requireRoles('admin'),
+    requireRoles('admin'),
     clienteController.disableCliente
 );
 
@@ -26,7 +26,7 @@ router.patch(
 router.patch(
     '/:id/enable',
     verifyToken,
-    //requireRoles('admin'),
+    requireRoles('admin'),
     clienteController.enableCliente
 );
 
@@ -34,7 +34,7 @@ router.patch(
 router.delete(
     '/:id/delete',
     verifyToken,
-    //requireRoles('admin'),
+    requireRoles('admin'),
     clienteController.deleteCliente
 );
 

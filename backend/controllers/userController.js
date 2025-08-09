@@ -104,12 +104,17 @@ exports.refreshToken = async (req, res) => {
         }
 
         //Verifico il refresh token
-        jwt.verify(refreshToken, process.env.JWT_SECRET, (err, decoded) => {
+        jwt.verify(refreshToken, process.env.JWT_SECRET, async (err, decoded) => {
             if (err) {
                 return res.status(403).json({dettagli: "Refresh Token scaduto o invalido"});
             }
 
-            const { accessToken } = generateToken(decoded.id, true);
+            const user = await Utente.findById(decoded.id).select('ruolo');
+            if (!user) {
+                return res.status(404).json({ dettagli: "Utente non trovato" });
+            }
+
+            const { accessToken } = generateToken(decoded.id, user.ruolo, true);
 
             return res.json({ accessToken });
         });

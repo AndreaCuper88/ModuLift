@@ -5,8 +5,9 @@ const generaToken = (idUtente, ruolo, soloAccessToken = false) => {
     const accessToken = jwt.sign(
         { id: idUtente , ruolo: ruolo},
         process.env.JWT_SECRET,
-        { expiresIn: '20s' }
+        { expiresIn: '10s' }
     );
+    console.log(ruolo);
 
     if (soloAccessToken) {
         return { accessToken };
