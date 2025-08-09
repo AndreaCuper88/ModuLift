@@ -1,109 +1,130 @@
 import axios from 'axios';
 
-//Creo un'istanza personalizzata di Axios
+// Creo un'istanza personalizzata di Axios per centralizzare baseURL, header comuni e timeout.
+// In questo modo posso anche attaccare interceptor senza toccare axios globale.
 const axiosInstance = axios.create({
-    baseURL: `${process.env.REACT_APP_API_BASE_URL}/api`,//Url di base di tutte le richieste
-    headers: {
-        'Content-Type': 'application/json', //I dati inviati saranno in formato JSON
-    },
-    timeout: 10000, //Se il server non risponde entro 10 secondi la richiesta fallisce con errore
+    baseURL: `${process.env.REACT_APP_API_BASE_URL}/api`,
+    headers: { 'Content-Type': 'application/json' },
+    timeout: 10000,
 });
 
-//Flag per evitare più richieste di refresh in parallelo
+/* ===========================
+   REQUEST INTERCEPTOR
+   ===========================
+   Prima di OGNI richiesta leggo l'ultimo accessToken da localStorage
+   e lo metto nell'header Authorization.
+   Questo evita il problema del "token congelato" sui defaults.
+*/
+axiosInstance.interceptors.request.use((config) => {
+    const t = localStorage.getItem('accessToken');
+    // Mi assicuro che gli headers esistano (alcuni adapter possono non settarli).
+    config.headers = config.headers || {};
+    if (t) {
+        config.headers['Authorization'] = 'Bearer ' + t;
+    } else {
+        // Se non ho token, mi tolgo l'Authorization per evitare header sporchi.
+        delete config.headers['Authorization'];
+    }
+    return config;
+});
+
+// Flag per evitare più refresh in parallelo: quando è true, accodo le richieste.
 let isRefreshing = false;
 
-//coda di richieste fallite da riprovare una volta aggiornato il token
+// Coda delle richieste fallite con 401 mentre sto facendo refresh.
+// Le "parcheggio" qui e le risveglio quando ho un token nuovo.
 let failedQueue = [];
 
-/**
- * Funzione per la gestione della coda di eventuali richieste fallite
- * Quindi sostanzialmente se ricevo un nuovo token riprovo tutte le richieste in coda
- * Altrimenti le rigetto tutte
- */
+// Funzione che processa la coda: se ho un errore rifiuto tutte,
+// se ho un token nuovo risolvo le promesse e rilancio le richieste originali.
 const processQueue = (error, token = null) => {
-    failedQueue.forEach((item) => {
-        if (error) {
-            item.reject(error); //Rigetto le richieste con errori
-        } else {
-            item.resolve(token); //Risolvo le richieste con il nuovo accessToken, vedi riga 49
-        }
+    failedQueue.forEach(({ resolve, reject }) => {
+        if (error) reject(error);
+        else resolve(token);
     });
-    failedQueue = []; //Quindi svuoto la coda
+    failedQueue = [];
 };
 
-//Axios interceptor, eseguito per ogni risposta ricevuta
-//Sintassi: axiosInstance.interceptors.response.use(successCallback, errorCallback)
+/* ===========================
+   RESPONSE INTERCEPTOR
+   ===========================
+   Se il server risponde con errore, qui gestisco i 401 dovuti
+   a access token scaduto: provo il refresh UNA SOLA VOLTA,
+   serializzando la chiamata per evitare richieste duplicate.
+*/
 axiosInstance.interceptors.response.use(
-    response => response, //Se la risposta è OK, non faccio nulla: axios considera okay tutte le risposte comprese tra 200 e 299
+    // Caso "ok": lascio passare la risposta così com'è.
+    (response) => response,
 
-    async error => {
-        const originalRequest = error.config; //Mi salvo la richiesta originale, contenuta in error.config
+    // Caso "errore": gestisco 401 e metto in coda le richieste se serve.
+    async (error) => {
+        const status = error.response?.status;
+        // Mi salvo la richiesta originale che ha fallito: mi servirà per il retry.
+        const originalRequest = error.config || {};
 
-        //Se ricevo un 401(Unauthorized) o 403 (Forbidden) e non ho già provato, riprovo la richiesta
-        if ((error.response?.status === 401 || error.response?.status === 403) && !originalRequest._retry) {
-            originalRequest._retry = true; //Setto su true per evitare loop infiniti di retry, ._retry è una proprietà personalizzata che aggiungo manualmente all'oggetto config della richiesta
+        // Provo il refresh SOLO sui 401 (token scaduto/invalidato).
+        // NON lo faccio sui 403: 403 è permesso negato, non token da rinnovare.
+        if (status === 401 && !originalRequest._retry) {
+            // Segno che questa richiesta sta già facendo retry per evitare loop infiniti.
+            originalRequest._retry = true;
 
-            if (isRefreshing) { //Se un refresh è già in corso
+            // Se un refresh è già in corso, non ne faccio un altro:
+            // accodo questa richiesta e la rilancerò quando avrò il token nuovo.
+            if (isRefreshing) {
                 return new Promise((resolve, reject) => {
                     failedQueue.push({
                         resolve: (token) => {
-                            //Quando ricevo il nuovo token aggiorno l'Authorization header della richiesta originale
+                            // Quando ho il token nuovo, aggiorno l'Authorization
+                            // della richiesta originale e la rilancio.
+                            originalRequest.headers = originalRequest.headers || {};
                             originalRequest.headers['Authorization'] = 'Bearer ' + token;
                             resolve(axiosInstance(originalRequest));
                         },
-                        reject: (error) => {
-                            reject(error); //In caso di errore rigetto
-                        }
+                        reject,
                     });
                 });
             }
-            // Altrimenti, sono il primo che prova il refresh
+
+            // Sono il primo a rilevare il 401: mi prendo l'onere di fare il refresh.
             isRefreshing = true;
 
             try {
-                // Faccio una richiesta al backend per ottenere un nuovo access token
+                // Uso axios "grezzo" (non l'istanza) per evitare che gli interceptor
+                // di questa istanza interferiscano con la chiamata di refresh.
                 const res = await axios.post(
                     `${process.env.REACT_APP_API_BASE_URL}/api/users/refresh-token`,
                     {},
-                    { withCredentials: true } // Invio anche i cookie
+                    { withCredentials: true } // mando i cookie httpOnly con il refresh token
                 );
 
-                // Prendo il nuovo access token dalla risposta
+                // Estraggo il nuovo access token dalla risposta del backend.
                 const newAccessToken = res.data.accessToken;
 
+                // Lo salvo in localStorage: il request-interceptor lo applicherà
+                // automaticamente alle richieste future.
                 localStorage.setItem('accessToken', newAccessToken);
 
-                // Aggiorno l’header Authorization di default per tutte le nuove richieste
-                axiosInstance.defaults.headers.common['Authorization'] = 'Bearer ' + newAccessToken;
-
-                // Risolvo tutte le richieste in coda con il nuovo token
+                // Risveglio tutte le richieste in coda fornendo il token nuovo.
                 processQueue(null, newAccessToken);
 
-                // Aggiungo il nuovo token alla richiesta originale e la rilancio
-                //Richiesta originale: richiesta che ha fatto scattare il refresh del token
+                // Aggiorno anche l'Authorization della richiesta originale che ha triggherato il refresh…
+                originalRequest.headers = originalRequest.headers || {};
                 originalRequest.headers['Authorization'] = 'Bearer ' + newAccessToken;
+                // …e la rilancio subito.
                 return axiosInstance(originalRequest);
-
             } catch (err) {
-                // Se il refresh fallisce, rigetto tutte le richieste in coda
+                // Il refresh è fallito: rifiuto tutte le richieste in coda.
                 processQueue(err, null);
-                // Fare logout automatico qui
+                // Forzo il logout globale: da qui in poi l'utente dovrà riloggarsi.
                 window.dispatchEvent(new Event('forceLogout'));
-                /**
-                 * Praticamente window, è un oggetto globale del browser
-                 * La funzione .dispatchEvent mi permette di lanciare, "emanare", un evento su un oggetto che in questo caso è condiviso
-                 * Quindi sostanzialmente lancio l'evento forceLogout per poi ascoltarlo e fare il logout
-                 * Tutto ciò poichè gli hook di React, useState, useEffect ecc.. funzionano solo dentro componenti React o altri hook
-                 */
-
                 return Promise.reject(err);
             } finally {
-                // Resetto il flag, pronto per altri refresh futuri
+                // Qualunque sia l'esito, sblocco la possibilità di fare altri refresh in futuro.
                 isRefreshing = false;
             }
         }
 
-        // Se non è un 401/403, o ho già ritentato → errore normale
+        // Non è un 401, oppure ho già ritentato questa richiesta: propago l'errore normalmente.
         return Promise.reject(error);
     }
 );

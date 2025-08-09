@@ -14,13 +14,12 @@ const verifyToken = (req, res, next) => {
 
     try {
         req.user = jwt.verify(token, process.env.JWT_SECRET);
-        console.log(req.user);
+
         //req è un oggetto condiviso quindi il middleware successivo
         //avrà a disposizione req.user e potrà verificare chi ha fatto la richiesta
         next();
     } catch (e) {
         console.error("Token non valido: ",e);
-
         return res.status(401).send('Accesso negato.');
     }
 };
