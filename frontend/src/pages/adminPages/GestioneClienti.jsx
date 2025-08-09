@@ -1,23 +1,86 @@
-import { useState } from "react";
+import {useEffect, useState} from "react";
 import { FaUser, FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
+import useAuth from "../../hooks/useAuth";
+import {getClienti, deleteCliente, disableCliente} from "../../api/clientiApi";
+
+import ClienteActionModal from "../../components/ClienteActionModal";
+
+
 export default function GestioneClienti() {
     const navigate = useNavigate();
+    const { auth } = useAuth();
 
-    const clientiFinti = [
-        { id: 1, nome: "Mario Rossi", email: "mario@esempio.com", dataRegistrazione: "2025-08-01" },
-        { id: 2, nome: "Lucia Bianchi", email: "lucia@esempio.com", dataRegistrazione: "2025-07-25" },
-        { id: 3, nome: "Alessio Verdi", email: "alessio@esempio.com", dataRegistrazione: "2025-08-05" }
-    ];
+    const [searchTerm, setSearchTerm] = useState("");//Barra di ricerca
+    const [clienti, setClienti] = useState([]);//Array di clienti da caricare
 
-    const [searchTerm, setSearchTerm] = useState("");
-    const [clienti, setClienti] = useState(clientiFinti);
+    //Gestione modal eliminazione clienti
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedCliente, setSelectedCliente] = useState(null);
 
-    const handleElimina = (id) => {
-        const conferma = window.confirm("Sei sicuro di voler eliminare questo cliente?");
-        if (conferma) {
-            setClienti(prev => prev.filter(cliente => cliente.id !== id));
+    //Loading
+    const [loading, setLoading] = useState(false);
+    const [loadingAction, setLoadingAction] = useState(false);
+
+    useEffect(() => {
+        const fetchClienti = async () => {
+            if (!auth?.accessToken) return;
+
+            try {
+                setLoading(true);
+                const data = await getClienti(auth.accessToken);
+                //console.log(data); per debug
+                setClienti(data);
+            } catch (err) {
+                console.error("Errore nel caricamento dei clienti:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchClienti();
+    }, [auth]);
+
+    //Apertura e chiusura del modal, apro il modal e punto ad un cliente
+    const openModal = (cliente) => {
+        setSelectedCliente(cliente);
+        setIsModalOpen(true);
+    };
+    const closeModal = () => {
+        setSelectedCliente(null);
+        setIsModalOpen(false);
+    };
+
+    const handleDeactivate = async () => {
+        if (!selectedCliente) return;
+
+        try {
+            setLoadingAction(true);
+            await disableCliente(selectedCliente._id, auth.accessToken);
+            setClienti(prev => prev.filter(c => c._id !== selectedCliente._id));
+            //.filter crea un nuovo array mantenendo solo gli elementi che rispettano la condizione
+            closeModal();
+        } catch (e) {
+            console.error("Errore disattivazione cliente: ", e);
+        } finally {
+            setLoadingAction(false);
+        }
+    }
+
+    const handleDelete = async () => {
+        if (!selectedCliente) return;
+        try {
+            setLoadingAction(true);
+            await deleteCliente(selectedCliente._id, auth.accessToken);
+
+            setClienti(prev => prev.filter(c => c._id !== selectedCliente._id));
+            //.filter crea un nuovo array mantenendo solo gli elementi che rispettano la condizione
+            closeModal();
+        } catch (e) {
+            console.error("Errore eliminazione:", e);
+        } finally {
+            setLoadingAction(false);
         }
     };
 
@@ -46,7 +109,7 @@ export default function GestioneClienti() {
                 {clientiFiltrati.length > 0 ? (
                     clientiFiltrati.map(cliente => (
                         <div
-                            key={cliente.id}
+                            key={cliente._id}
                             className="flex flex-col sm:flex-row sm:items-center justify-between bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-6 rounded-2xl shadow-md hover:shadow-lg transition duration-200"
                         >
                             <div className="flex items-center gap-5 mb-4 sm:mb-0">
@@ -63,28 +126,29 @@ export default function GestioneClienti() {
                             <div className="flex gap-2 flex-wrap justify-end">
                                 <button
                                     className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                                    onClick={() => navigate(`/admin/scheda/${cliente.id}`)}
+                                    onClick={() => navigate(`/admin/scheda/${cliente._id}`)}
                                 >
                                     Scheda
                                 </button>
                                 <button
                                     className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
-                                    onClick={() => navigate(`/admin/misure/${cliente.id}`)}
+                                    onClick={() => navigate(`/admin/misure/${cliente._id}`)}
                                 >
                                     Misure
                                 </button>
                                 <button
                                     className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
-                                    onClick={() => navigate(`/admin/piano/${cliente.id}`)}
+                                    onClick={() => navigate(`/admin/piano/${cliente._id}`)}
                                 >
                                     Piano alimentare
                                 </button>
                                 <button
-                                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition flex items-center gap-1"
-                                    onClick={() => handleElimina(cliente.id)}
+                                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition flex items-center gap-1 disabled:opacity-60"
+                                    onClick={() => openModal(cliente)}
+                                    disabled={loadingAction && selectedCliente?._id === cliente._id}
                                 >
                                     <FaTrash className="text-sm" />
-                                    Elimina
+                                    {(loadingAction && selectedCliente?._id === cliente._id) ? "In corso…" : "Elimina"}
                                 </button>
                             </div>
                         </div>
@@ -93,6 +157,15 @@ export default function GestioneClienti() {
                     <p className="text-center text-gray-500 dark:text-gray-400">Nessun cliente trovato.</p>
                 )}
             </div>
+            {/* Modale azioni */}
+            <ClienteActionModal
+                open={isModalOpen}
+                onClose={closeModal}
+                onDeactivate={handleDeactivate}
+                onDelete={handleDelete}
+                cliente={selectedCliente}
+                loading={loadingAction}
+            />
         </div>
     );
 }
