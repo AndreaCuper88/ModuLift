@@ -1,4 +1,4 @@
-import {useEffect, useState} from "react";
+import React, {useEffect, useState} from "react";
 import { FaUser, FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
@@ -30,7 +30,7 @@ export default function GestioneClienti() {
             try {
                 setLoading(true);
                 const data = await getClienti(auth.accessToken);
-                //console.log(data); per debug
+                console.log(data);
                 setClienti(data);
             } catch (err) {
                 console.error("Errore nel caricamento dei clienti:", err);
@@ -117,9 +117,13 @@ export default function GestioneClienti() {
                             className="flex flex-col sm:flex-row sm:items-center justify-between bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-6 rounded-2xl shadow-md hover:shadow-lg transition duration-200"
                         >
                             <div className="flex items-center gap-5 mb-4 sm:mb-0">
-                                <div className="bg-blue-100 dark:bg-blue-900 p-3 rounded-full">
-                                    <FaUser className="text-2xl text-blue-600 dark:text-blue-400" />
-                                </div>
+                                    {cliente.avatarPath ? (
+                                        <img src={`${process.env.REACT_APP_API_BASE_URL}/uploads/avatars/${cliente.avatarPath}`} alt="User" className="w-12 h-12 rounded-full object-cover" />
+                                    ) : (
+                                        <div className="bg-blue-100 dark:bg-blue-900 p-3 rounded-full">
+                                            <FaUser className="text-2xl text-blue-600 dark:text-blue-400" />
+                                        </div>
+                                    )}
                                 <div>
                                     <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{cliente.nome}</h2>
                                     <p className="text-sm text-gray-600 dark:text-gray-300">{cliente.email}</p>
