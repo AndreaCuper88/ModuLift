@@ -30,7 +30,7 @@ export default function GestioneClienti() {
             try {
                 setLoading(true);
                 const data = await getClienti(auth.accessToken);
-                console.log(data);
+                //console.log(data);
                 setClienti(data);
             } catch (err) {
                 console.error("Errore nel caricamento dei clienti:", err);

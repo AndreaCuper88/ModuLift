@@ -1,6 +1,7 @@
 // src/components/ExerciseModal.jsx
 import React, { useEffect, useState } from "react";
 import { X } from "lucide-react";
+import { uploadExerciseImage, createExercise } from "../../src/api/editorSchedeApi";
 
 const MUSCLES = [
     "petto",
@@ -33,7 +34,7 @@ export default function ExerciseModal({ isOpen, onClose, onCreated, token }) {
 
     useEffect(() => {
         if (!isOpen) {
-            // reset quando chiudi
+            // reset quando chiudo
             setName("");
             setMuscle(MUSCLES[0]);
             setFile(null);
@@ -49,7 +50,7 @@ export default function ExerciseModal({ isOpen, onClose, onCreated, token }) {
         setPreview(f ? URL.createObjectURL(f) : null);
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setErr("");
 
@@ -58,19 +59,36 @@ export default function ExerciseModal({ isOpen, onClose, onCreated, token }) {
         if (!muscle) return setErr("Seleziona un muscolo.");
         if (!file) return setErr("Carica un'immagine (PNG/JPG).");
 
-        setSubmitting(true);
+        try {
+            setSubmitting(true);
 
 
-        const payload = {
-            name: name.trim(),
-            muscle,
-            file,                  // File oggetto (per upload futuro)
-            filename: file.name,
-        };
+            //Upload immagine
+            const uploadRes = await uploadExerciseImage(file, muscle, token);
 
-        onCreated?.(payload);
-        setSubmitting(false);
-        onClose();
+            //Creazione esercizio
+            const newExercise = {
+                name: name.trim(),
+                muscle,
+                imagePath: uploadRes.filename, // solo nome del file
+            };
+            const createRes = await createExercise(newExercise, token);
+
+            if (!uploadRes || !uploadRes.filename) {
+                throw new Error("Upload fallito o filename mancante");
+            }
+
+            // Callback opzionale
+            onCreated?.(createRes);
+
+            // Chiudi modal
+            onClose();
+        } catch (error) {
+            console.error(error);
+            setErr(error.message || "Errore durante la creazione dell'esercizio");
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     if (!isOpen) return null;

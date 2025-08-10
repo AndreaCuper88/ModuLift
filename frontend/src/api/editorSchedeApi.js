@@ -26,3 +26,34 @@ export const getExercises = async (token) => {
         console.error("Errore durante il fetch degli esercizi:", error);
     }
 }
+
+export const createExercise = async (exercise, token) => {
+    try {
+        const res = await axios.post("editorSchede/createExercise", exercise, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+        return res.data;
+    } catch (error) {
+        console.error("Errore durante la creazione dell'esercizio:", error);
+    }
+}
+
+export const uploadExerciseImage = async (file, muscle, token) => {
+    try {
+        const formData = new FormData(); //Creo un'istanza di FormData
+        formData.append('muscle', muscle);
+        formData.append('file', file);  //Vi aggiungo il file
+
+        const res = await axios.post("uploads/uploadExerciseImage", formData, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "multipart/form-data",
+            },
+        });
+        return res.data;
+    } catch (e) {
+        console.error("Errore durante il caricamento dell'immagine: ",e);
+    }
+}

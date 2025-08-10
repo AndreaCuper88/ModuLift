@@ -116,7 +116,7 @@ export default function CoachWorkoutEditor() {
                         </div>
                     ):(
                         <div className="flex items-center gap-3">
-                            <img src={`${API_BASE}/${user.avatarPath}`} alt="User" className="w-12 h-12 rounded-full object-cover" />
+                            <img src={`${API_BASE}/uploads/avatars/${user.avatarPath}`} alt="User" className="w-12 h-12 rounded-full object-cover" />
                             <div className="flex flex-col">
                                 <span className="font-semibold">{user.nome} {user.cognome}</span>
                                 <span className="text-sm text-gray-500">{user.email}</span>
