@@ -123,7 +123,14 @@ export default function GestioneClienti() {
                                 <div>
                                     <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{cliente.nome}</h2>
                                     <p className="text-sm text-gray-600 dark:text-gray-300">{cliente.email}</p>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Registrato il {cliente.dataRegistrazione}</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                        Registrato il {new Date(cliente.dataRegistrazione).toLocaleDateString('it-IT', {
+                                        day: '2-digit',
+                                        month: '2-digit',
+                                        year: 'numeric'
+                                    })}
+                                    </p>
+
                                 </div>
                             </div>
 

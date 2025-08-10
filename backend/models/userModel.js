@@ -49,6 +49,11 @@ const utenteSchema = new mongoose.Schema({
         enum: ['M', 'F', 'Altro'],
         required: false
     },
+    avatarPath: {
+        type: String,
+        trim: true,
+        default: null
+    },
     dataRegistrazione: {
         type: Date,
         default: Date.now
