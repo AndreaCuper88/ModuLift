@@ -3,7 +3,7 @@ const { Schema } = mongoose;
 
 // Enum muscoli principali
 const MUSCLES = [
-    'petto', 'schiena', 'gambe', 'quadricipiti', 'femorali', 'glutei',
+    'petto', 'dorso', 'gambe', 'quadricipiti', 'femorali', 'glutei',
     'spalle', 'deltoidi_anteriori', 'deltoidi_laterali', 'deltoidi_posteriori',
     'bicipiti', 'tricipiti', 'polpacci', 'addominali', 'obliqui'
 ];
