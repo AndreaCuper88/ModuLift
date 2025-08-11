@@ -162,7 +162,6 @@ exports.setPlan = async (req, res) => {
             //new: ottengo subito il piano da ritornare al cilent
             //upsert: se l'utente non ha ancora un piano viene creato
         );
-        console.log(updated.plan);
         return res.status(200).json({
             message: existingPlan ? "Piano aggiornato" : "Piano creato",
         })
