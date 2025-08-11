@@ -75,3 +75,36 @@ export const deleteExercise = async (id, token) => {
         throw error;
     }
 }
+
+export const upsertPlan = async (payload, token) => {
+    try {
+        const res = await axios.post(
+            "editorSchede/upsertPlan",
+            payload,
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            }
+        );
+        return res.data;
+    } catch (error) {
+        console.error("Errore durante la creazione/modifica del piano: ", error);
+    }
+}
+
+export const loadPlan = async (userId,token) => {
+    try {
+        const res = await axios.get(
+            `editorSchede/loadPlan/${userId}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            }
+        )
+        return res.data;
+    } catch (e) {
+        console.error("Errore durante il recupero del piano: ", e);
+    }
+}

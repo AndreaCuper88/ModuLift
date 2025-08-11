@@ -8,7 +8,7 @@ const MUSCLES = [
     'bicipiti', 'tricipiti', 'polpacci', 'addominali', 'obliqui'
 ];
 
-const ExerciseSchema = new Schema({
+const ExerciseModel = new Schema({
     name: {
         type: String,
         required: true,
@@ -26,4 +26,4 @@ const ExerciseSchema = new Schema({
     }
 });
 
-module.exports = mongoose.model('Exercise', ExerciseSchema);
+module.exports = mongoose.model('Exercise', ExerciseModel);

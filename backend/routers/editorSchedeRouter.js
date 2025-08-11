@@ -37,4 +37,20 @@ router.delete(
     editorController.removeExercise
 );
 
+// [POST] /api/editorSchede/upsertPlan → Upsert del piano, modifico o aggiorno se necessario (solo admin)
+router.post(
+    '/upsertPlan',
+    verifyToken,
+    requireRoles('admin'),
+    editorController.setPlan
+);
+
+// [GET] /api/editorSchede/loadPlan → Recupero il piano attivo più recente dell'utente (solo admin)
+router.get(
+    '/loadPlan/:userId',
+    verifyToken,
+    requireRoles('admin'),
+    editorController.loadPlan
+)
+
 module.exports = router;

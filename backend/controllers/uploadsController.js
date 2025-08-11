@@ -1,4 +1,4 @@
-const Exercise = require('../models/exerciseSchema');
+const Exercise = require('../models/exerciseModel');
 const mongoose = require('mongoose');
 
 exports.uploadExerciseImage = async (req, res) => {
