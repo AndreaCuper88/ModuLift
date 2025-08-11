@@ -29,4 +29,12 @@ router.post(
     editorController.createExercise
 );
 
+// [DELETE] /api/editorSchede/removeExercise → Rimozione di un esercizio (solo admin)
+router.delete(
+    '/removeExercise/:id',
+    verifyToken,
+    requireRoles('admin'),
+    editorController.removeExercise
+);
+
 module.exports = router;

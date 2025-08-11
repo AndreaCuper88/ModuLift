@@ -51,3 +51,23 @@ exports.createExercise = async (req, res) => {
         return res.status(500).json({ errore: 'Errore interno del server' });
     }
 };
+
+exports.removeExercise = async (req, res) => {
+    try {
+        const { id } = req.params;
+        if (!id) {
+            return res.status(400).json({ message: "ID esercizio mancante" });
+        }
+        const deleted = await Exercise.findByIdAndDelete(id);
+        if (!deleted) {
+            return res.status(404).json({ message: "Esercizio non trovato" });
+        }
+        return res.status(200).json({
+            message: "Esercizio eliminato con successo",
+            deleted
+        });
+    } catch (e) {
+        console.error("Errore durante la rimozione dell'esercizio: ",e);
+        res.status(500).json({ errore: "Errore interno del server" });
+    }
+}

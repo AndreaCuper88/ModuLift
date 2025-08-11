@@ -57,3 +57,21 @@ export const uploadExerciseImage = async (file, muscle, token) => {
         console.error("Errore durante il caricamento dell'immagine: ",e);
     }
 }
+
+export const deleteExercise = async (id, token) => {
+    try {
+        const res = await axios.delete(
+            `editorSchede/removeExercise/${id}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            }
+        );
+        console.log(res.data.message);
+        return res.data;
+    } catch (error) {
+        console.error("Errore durante l'eliminazione:", error.response?.data || error.message);
+        throw error;
+    }
+}

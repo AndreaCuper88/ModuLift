@@ -55,7 +55,7 @@ export default function App() {
                 <Navbar setAlert={setAlert} />
                 <main className="flex-grow"> {/* forzo il main crescere e quindi riempire lo spazio tra navbar e footer */}
                     <PublicRoutes />
-                    <AdminRoutes />
+                    <AdminRoutes setAlert={setAlert} />
                     <ClienteRoutes />
                 </main>
                 <Footer />

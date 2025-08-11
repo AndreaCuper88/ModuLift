@@ -1,13 +1,14 @@
 import React, {useEffect, useMemo, useState} from "react";
 import { Plus, Trash2, Search, ClipboardList, ChevronUp, ChevronDown, X } from "lucide-react";
-import {getCliente, getExercises} from "../../api/editorSchedeApi";
+import {deleteExercise, getCliente, getExercises} from "../../api/editorSchedeApi";
 import {useParams} from "react-router-dom";
 import useAuth from "../../hooks/useAuth";
 import ExerciseModal from "../../components/exerciseModal";
 
+
 const TEMPLATE_DAYS = Array.from({ length: 7 }, (_, i) => ({ id: `day-${i + 1}`, label: `Giorno ${i + 1}` }));
 
-export default function CoachWorkoutEditor() {
+export default function CoachWorkoutEditor({setAlert}) {
     const {id} = useParams();
     const { auth } = useAuth();
     const API_BASE = process.env.REACT_APP_API_BASE_URL;
@@ -62,8 +63,21 @@ export default function CoachWorkoutEditor() {
         });
     };
 
-    const removeExerciseFromLibrary = (exId) => {
-        setExerciseList((prev) => prev.filter((e) => (e._id || e.id) !== exId));
+    const removeExerciseFromLibrary = async (exId) => {
+        try {
+            const {message,removed} = await deleteExercise(exId, auth.accessToken);
+            setExerciseList((prev) => prev.filter((e) => (e._id || e.id) !== exId));
+            setAlert({
+                message: message || `${removed?.name || "Esercizio"} rimosso con successo!`,
+                type: "success",
+            })
+        } catch (e) {
+            console.log("Errore durante la rimozione dell'esercizio: ",e);
+            setAlert({
+                message: 'Errore durante la rimozione',
+                type: "danger",
+            })
+        }
     };
 
     const removeFromDay = (dayId, uid) => setPlan((prev) => ({ ...prev, [dayId]: prev[dayId].filter((i) => i.uid !== uid) }));
@@ -136,32 +150,42 @@ export default function CoachWorkoutEditor() {
                                 ))}
                             </select>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 overflow-y-auto pr-1">
-                            {filtered.map((ex) => (
-                                <div key={ex._id || ex.id} className="flex items-center gap-3 p-3 border rounded-lg bg-gray-50">
-                                    {(ex.imagePath || ex.image) && (
-                                        <img
-                                            src={ex.image ? ex.image : `${API_BASE}/uploads/exercises/${ex.muscle}/${ex.imagePath}`}
-                                            alt={ex.name}
-                                            className="w-12 h-12 object-cover rounded"
-                                        />
-                                    )}
-                                    <div className="flex-1 min-w-0">
-                                        <h3 className="font-semibold text-sm truncate">{ex.name}</h3>
-                                        <p className="text-xs text-gray-500">{ex.muscle.charAt(0).toUpperCase() + ex.muscle.slice(1)}</p>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <button onClick={() => addToDay(ex)} className="p-2 bg-blue-600 text-white rounded-lg"><Plus className="w-4 h-4" /></button>
-                                        <button onClick={() => removeExerciseFromLibrary(ex._id || ex.id)} className="p-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50" title="Elimina esercizio"><Trash2 className="w-4 h-4" /></button>
-                                    </div>
-                                </div>
-                            ))}
-                            <div className="flex items-center justify-center p-3 border rounded-lg bg-gray-50 min-h-[86px]">
-                                <button type="button" className="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center" aria-label="Aggiungi nuovo esercizio" onClick={() => setIsOpen(true)}>
-                                    <Plus className="w-6 h-6" />
-                                </button>
+                        {loadingExercises ? (
+                            <div role="status">
+                                <svg aria-hidden="true" className="w-8 h-8 text-gray-200 animate-spin fill-blue-600" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"/>
+                                    <path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill"/>
+                                </svg>
+                                <span className="sr-only">Loading...</span>
                             </div>
-                        </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 overflow-y-auto pr-1">
+                                {filtered.map((ex) => (
+                                    <div key={ex._id || ex.id} className="flex items-center gap-3 p-3 border rounded-lg bg-gray-50">
+                                        {(ex.imagePath || ex.image) && (
+                                            <img
+                                                src={ex.image ? ex.image : `${API_BASE}/uploads/exercises/${ex.muscle}/${ex.imagePath}`}
+                                                alt={ex.name}
+                                                className="w-12 h-12 object-cover rounded"
+                                            />
+                                        )}
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="font-semibold text-sm truncate">{ex.name}</h3>
+                                            <p className="text-xs text-gray-500">{ex.muscle.charAt(0).toUpperCase() + ex.muscle.slice(1)}</p>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <button onClick={() => addToDay(ex)} className="p-2 bg-blue-600 text-white rounded-lg"><Plus className="w-4 h-4" /></button>
+                                            <button onClick={() => removeExerciseFromLibrary(ex._id || ex.id)} className="p-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50" title="Elimina esercizio"><Trash2 className="w-4 h-4" /></button>
+                                        </div>
+                                    </div>
+                                ))}
+                                <div className="flex items-center justify-center p-3 border rounded-lg bg-gray-50 min-h-[86px]">
+                                    <button type="button" className="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center" aria-label="Aggiungi nuovo esercizio" onClick={() => setIsOpen(true)}>
+                                        <Plus className="w-6 h-6" />
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     <div className="bg-white rounded-xl p-4 border shadow-sm flex flex-col max-h-[78vh]">

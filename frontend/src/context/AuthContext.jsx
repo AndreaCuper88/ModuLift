@@ -11,6 +11,8 @@ export const AuthProvider = ({ children }) => {
         user: null,
         accessToken: null,
     });
+    const [ready, setReady] = useState(false); //Per gestire il caricamento dei dati
+    //Sostanzialmente per attendere il caricamento dei dati a seguito di un reload della pagina
 
     const login = async (email, password) => {
         try {
@@ -24,6 +26,9 @@ export const AuthProvider = ({ children }) => {
         } catch (e) {
             console.error("Errore durante il login: ",e);
         }
+        finally {
+            setReady(true);
+        }
     };
 
     const logout = async () => {
@@ -31,10 +36,12 @@ export const AuthProvider = ({ children }) => {
             await axios.post("users/logout", {}, {withCredentials: true});
         } catch (e) {
             console.error("Errore durante il logout: ",e);
+        } finally {
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("user");
+            setAuth({user: null, accessToken: null});
+            setReady(true);
         }
-
-        localStorage.removeItem("accessToken");
-        setAuth({user: null, accessToken: null});
     }
 
     useEffect(() => {
@@ -51,12 +58,13 @@ export const AuthProvider = ({ children }) => {
                 localStorage.removeItem("user");
             }
         }
+        setReady(true);
     }, []);
 
 
     //Quindi fornisco un componente con i dati del contesto accessibili ai figli
     return (
-        <AuthContext.Provider value={{ auth, setAuth, login, logout }}>
+        <AuthContext.Provider value={{ auth, setAuth, login, logout, ready }}>
             {children}
         </AuthContext.Provider>
     );
