@@ -26,6 +26,9 @@ export default function CoachWorkoutEditor({setAlert}) {
     const [loadingExercises, setLoadingExercises] = useState(true); //Gestione caricamento esercizi
     const [isOpen, setIsOpen] = useState(false); //Gestione modal aggiunta esercizio
     const [saving, setSaving] = useState(false); //Animazione salvataggio piano
+    const [planStartDate, setPlanStartDate] = useState('');
+    const [planEndDate, setPlanEndDate] = useState('');
+
 
 
     useEffect(() => {
@@ -148,6 +151,17 @@ export default function CoachWorkoutEditor({setAlert}) {
                 const doc = await loadPlan(id, auth.accessToken);
                 if (!doc) return; // nessun piano trovato (404 o altro)
 
+                const start = new Date(doc.createdAt);
+                const end = new Date(start);
+                end.setDate(end.getDate() + doc.weeks * 7);
+
+                setPlanStartDate(
+                    start.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                );
+                setPlanEndDate(
+                    end.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                );
+
                 // dizionario esercizi
                 const dict = new Map((EXERCISE_LIBRARY || []).map(e => [String(e._id || e.id), e]));
 
@@ -186,6 +200,7 @@ export default function CoachWorkoutEditor({setAlert}) {
         fetchLatestPlan();
     }, [id, auth.accessToken, loadingExercises, EXERCISE_LIBRARY, API_BASE]);
 
+
     return (
         <div className="min-h-screen w-full bg-white p-4 md:p-6 lg:p-8 text-gray-900">
             <ExerciseModal
@@ -196,12 +211,31 @@ export default function CoachWorkoutEditor({setAlert}) {
                 setExerciseList((prev) => [ex, ...prev]);   //Aggiorno lista esercizi locale
             }}
             />
+
+            {/* Sezione titolo */}
             <div className="mx-auto max-w-[1400px]">
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-3">
                         <ClipboardList className="h-6 w-6" />
                         <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">Editor Schede</h1>
                     </div>
+
+                    {/* Sezione campo validità piano */}
+                    <div className="flex flex-col items-center text-center">
+                        <span className="text-sm text-gray-500">Validità piano:</span>
+                        {planStartDate == '' && planEndDate == '' || isNaN(planStartDate) && isNaN(planEndDate) ? (
+                            <span className="font-medium">
+                                Date non disponibili, piano ancora da creare
+                            </span>
+                        ) : (
+                            <span className="font-medium">
+                                dal {planStartDate} al {planEndDate}
+                            </span>
+                        )
+                        }
+                    </div>
+
+                    {/* Sezione utente o loader */}
                     {loadingUser ? (
                         <div role="status">
                             <svg aria-hidden="true" className="w-8 h-8 text-gray-200 animate-spin fill-blue-600" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
