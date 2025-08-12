@@ -151,16 +151,7 @@ export default function CoachWorkoutEditor({setAlert}) {
                 const doc = await loadPlan(id, auth.accessToken);
                 if (!doc) return; // nessun piano trovato (404 o altro)
 
-                const start = new Date(doc.createdAt);
-                const end = new Date(start);
-                end.setDate(end.getDate() + doc.weeks * 7);
-
-                setPlanStartDate(
-                    start.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' })
-                );
-                setPlanEndDate(
-                    end.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' })
-                );
+                console.log(planEndDate);
 
                 // dizionario esercizi
                 const dict = new Map((EXERCISE_LIBRARY || []).map(e => [String(e._id || e.id), e]));
@@ -192,6 +183,18 @@ export default function CoachWorkoutEditor({setAlert}) {
 
                 setWeeks(Number(doc.weeks) || 4);
                 setPlan(nextPlan);
+
+
+                const start = new Date(doc.createdAt);
+                const end = new Date(start);
+                end.setDate(end.getDate() + doc.weeks * 7);
+
+                setPlanStartDate(
+                    start.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                );
+                setPlanEndDate(
+                    end.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                );
             } catch (e) {
                 console.error("Errore caricamento ultimo piano:", e);
             }
@@ -223,7 +226,7 @@ export default function CoachWorkoutEditor({setAlert}) {
                     {/* Sezione campo validità piano */}
                     <div className="flex flex-col items-center text-center">
                         <span className="text-sm text-gray-500">Validità piano:</span>
-                        {planStartDate == '' && planEndDate == '' || isNaN(planStartDate) && isNaN(planEndDate) ? (
+                        {planStartDate == '' && planEndDate == '' ? (
                             <span className="font-medium">
                                 Date non disponibili, piano ancora da creare
                             </span>
