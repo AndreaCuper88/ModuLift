@@ -2,7 +2,7 @@ import axios from "../../src/api/axiosInstance";
 
 export const getClienti = async (token) => {
     try {
-        const response = await axios.get("clienti/getClienti", {
+        const response = await axios.get("admin/clienti/getClienti", {
             headers: {
                 Authorization: `Bearer ${token}`
             }
@@ -17,7 +17,7 @@ export const getClienti = async (token) => {
 export const disableCliente = async (id, token) => {
     try {
         const { data } = await axios.patch(
-            `clienti/${id}/disable`,
+            `admin/clienti/${id}/disable`,
             {},
             { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -30,7 +30,7 @@ export const disableCliente = async (id, token) => {
 
 export const deleteCliente = async (id, token) => {
     try {
-        const { data } = await axios.delete(`clienti/${id}/delete`, {
+        const { data } = await axios.delete(`admin/clienti/${id}/delete`, {
             headers: { Authorization: `Bearer ${token}` }
         });
         return data;

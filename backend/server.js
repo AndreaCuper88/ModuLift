@@ -12,7 +12,12 @@ const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN;
 const userRoutes = require('./routers/userRouter');
 const clienteRouterAdmin = require('./routers/clienteRouter_Admin');
 const editorSchedeRouter = require('./routers/editorSchedeRouter');
+const dashboardAdminRouter = require('./routers/dashboardAdminRouter');
 const uploadsRouter = require('./routers/uploadsRouter');
+
+//Import middlewares
+const verifyToken = require('./middlewares/verifyToken');
+const requireRoles = require('./middlewares/requireRoles');
 
 //Connessione al db
 connectDB().then(async () => console.log('Connesso a MongoDB!!!'));
@@ -31,9 +36,12 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 //Rotte API
 app.use('/api/users', userRoutes);
-app.use('/api/clienti', clienteRouterAdmin);
-app.use('/api/editorSchede', editorSchedeRouter);
+app.use(verifyToken);
 app.use('/api/uploads', uploadsRouter);
+app.use('/api/admin', requireRoles('admin'));
+app.use('/api/admin/clienti', clienteRouterAdmin);
+app.use('/api/admin/editorSchede', editorSchedeRouter);
+app.use('/api/admin/dashboard', dashboardAdminRouter);
 
 app.listen(PORT, () => {
     console.log(`Server avviato su http://localhost:${PORT}`);

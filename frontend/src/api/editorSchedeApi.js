@@ -2,7 +2,7 @@ import axios from "../../src/api/axiosInstance";
 
 export const getCliente = async (id,token) => {
     try {
-        const response = await axios.get(`editorSchede/getCliente/${id}`, {
+        const response = await axios.get(`admin/editorSchede/getCliente/${id}`, {
             headers: {
                 Authorization: `Bearer ${token}`
             }
@@ -16,7 +16,7 @@ export const getCliente = async (id,token) => {
 
 export const getExercises = async (token) => {
     try {
-        const response = await axios.get(`editorSchede/getExercises`, {
+        const response = await axios.get(`admin/editorSchede/getExercises`, {
             headers: {
                 Authorization: `Bearer ${token}`
             }
@@ -29,7 +29,7 @@ export const getExercises = async (token) => {
 
 export const createExercise = async (exercise, token) => {
     try {
-        const res = await axios.post("editorSchede/createExercise", exercise, {
+        const res = await axios.post("admin/editorSchede/createExercise", exercise, {
             headers: {
                 Authorization: `Bearer ${token}`
             }
@@ -61,7 +61,7 @@ export const uploadExerciseImage = async (file, muscle, token) => {
 export const deleteExercise = async (id, token) => {
     try {
         const res = await axios.delete(
-            `editorSchede/removeExercise/${id}`,
+            `admin/editorSchede/removeExercise/${id}`,
             {
                 headers: {
                     Authorization: `Bearer ${token}`
@@ -79,7 +79,7 @@ export const deleteExercise = async (id, token) => {
 export const upsertPlan = async (payload, token) => {
     try {
         const res = await axios.post(
-            "editorSchede/upsertPlan",
+            "admin/editorSchede/upsertPlan",
             payload,
             {
                 headers: {
@@ -96,7 +96,7 @@ export const upsertPlan = async (payload, token) => {
 export const loadPlan = async (userId,token) => {
     try {
         const res = await axios.get(
-            `editorSchede/loadPlan/${userId}`,
+            `admin/editorSchede/loadPlan/${userId}`,
             {
                 headers: {
                     Authorization: `Bearer ${token}`

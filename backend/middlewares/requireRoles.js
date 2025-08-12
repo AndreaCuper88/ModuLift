@@ -1,3 +1,5 @@
+/** @type {(...roles: string[]) => import('express').RequestHandler} */
+//commento JSDoc con tipizzazione: serve a dire all’editor che valore o funzione hai lì sotto e qual è il suo tipo
 module.exports = function requireRoles(...allowedRoles) {
     return (req, res, next) => {
         // Assumiamo che req.user sia già popolato da verifyToken
