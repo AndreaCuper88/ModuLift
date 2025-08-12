@@ -4,7 +4,7 @@ const dashboardController = require("../controllers/dashboardAdminController");
 
 const router = express.Router();
 
-// [GET] /api//getClienti → Recupera tutti i clienti (solo admin)
+// [GET] /api/admin/dashboard/getClienti → Recupera tutti i clienti attivi (solo admin)
 router.get(
     '/getClienti',
     dashboardController.getActiveUsers
