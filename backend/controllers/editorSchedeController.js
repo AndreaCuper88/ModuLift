@@ -1,23 +1,6 @@
-const Utente = require('../models/userModel');
 const Exercise = require('../models/exerciseModel');
 const WorkoutPlan = require('../models/planModel');
 const mongoose = require('mongoose');
-
-
-// [GET] /api/editorSchede/getCliente
-exports.getCliente = async (req, res) => {
-    try {
-        const {id} = req.params;
-        const cliente = await Utente.findOne({_id: id}).select("nome cognome avatarPath email");
-        if (!cliente) {
-            return res.status(404).json({errore: 'Cliente non trovato'});
-        }
-        res.status(200).json(cliente);
-    } catch (e) {
-        console.error("Errore durante il caricamento dei clienti: ",e);
-        res.status(500).json({ errore: "Errore interno del server" });
-    }
-}
 
 // [GET] /api/editorSchede/getExercises
 exports.getExercises = async (req, res) => {

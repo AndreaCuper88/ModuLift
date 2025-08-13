@@ -10,6 +10,7 @@ const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN;
 
 //Importazione Rotte
 const userRoutes = require('./routers/userRouter');
+const genericRoutes = require('./routers/genericRouter');
 const clienteRouterAdmin = require('./routers/clienteRouter_Admin');
 const editorSchedeRouter = require('./routers/editorSchedeRouter');
 const dashboardAdminRouter = require('./routers/dashboardAdminRouter');
@@ -39,6 +40,7 @@ app.use('/api/users', userRoutes);
 app.use(verifyToken);
 app.use('/api/uploads', uploadsRouter);
 app.use('/api/admin', requireRoles('admin'));
+app.use('/api/generic', genericRoutes);
 app.use('/api/admin/clienti', clienteRouterAdmin);
 app.use('/api/admin/editorSchede', editorSchedeRouter);
 app.use('/api/admin/dashboard', dashboardAdminRouter);

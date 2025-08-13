@@ -3,12 +3,6 @@ const editorController = require("../controllers/editorSchedeController");
 
 const router = express.Router();
 
-// [GET] /api/editorSchede/getCliente/:id → Recupera un cliente (solo admin)
-router.get(
-    '/getCliente/:id',
-    editorController.getCliente
-);
-
 // [GET] /api/editorSchede/getExercises → Recupera la lista degli esercizi memorizzati (solo admin)
 router.get(
     '/getExercises',
