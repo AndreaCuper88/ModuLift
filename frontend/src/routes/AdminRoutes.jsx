@@ -48,7 +48,7 @@ export default function AdminRoutes({setAlert}) {
             } />
             <Route path="/admin/piano/:id" element={
                 <AdminGuard>
-                    <GestionePianoUtente />
+                    <GestionePianoUtente setAlert={setAlert}/>
                 </AdminGuard>
             } />
             <Route path="/admin/misure/:id" element={

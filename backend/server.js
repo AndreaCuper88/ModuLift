@@ -14,6 +14,7 @@ const genericRoutes = require('./routers/genericRouter');
 const clienteRouterAdmin = require('./routers/clienteRouter_Admin');
 const editorSchedeRouter = require('./routers/editorSchedeRouter');
 const dashboardAdminRouter = require('./routers/dashboardAdminRouter');
+const pianoAlimentareRouter = require('./routers/pianoAlimentareRouter');
 const uploadsRouter = require('./routers/uploadsRouter');
 
 //Import middlewares
@@ -43,6 +44,7 @@ app.use('/api/admin', requireRoles('admin'));
 app.use('/api/generic', genericRoutes);
 app.use('/api/admin/clienti', clienteRouterAdmin);
 app.use('/api/admin/editorSchede', editorSchedeRouter);
+app.use('/api/admin/pianoAlimentare', pianoAlimentareRouter)
 app.use('/api/admin/dashboard', dashboardAdminRouter);
 
 app.listen(PORT, () => {
