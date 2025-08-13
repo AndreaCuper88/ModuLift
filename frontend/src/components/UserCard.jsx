@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { getCliente } from "../api/genericApi";
 import useAuth from "../hooks/useAuth";
+import {FaUser} from "react-icons/fa";
 
 export default function UserCard({ idUtente }) {
     const { auth } = useAuth();
@@ -73,11 +74,13 @@ export default function UserCard({ idUtente }) {
 
     return (
         <div className="flex items-center gap-3">
-            <img
-                src={`${API_BASE}/uploads/avatars/${user.avatarPath}`}
-                alt="User"
-                className="w-12 h-12 rounded-full object-cover"
-            />
+            {user.avatarPath ? (
+                <img src={`${process.env.REACT_APP_API_BASE_URL}/uploads/avatars/${user.avatarPath}`} alt="User" className="w-12 h-12 rounded-full object-cover" />
+            ) : (
+                <div className="bg-blue-100 dark:bg-blue-900 p-3 rounded-full">
+                    <FaUser className="text-2xl text-blue-600 dark:text-blue-400" />
+                </div>
+            )}
             <div className="flex flex-col">
                 <span className="font-semibold">{user.nome} {user.cognome}</span>
                 <span className="text-sm text-gray-500">{user.email}</span>
