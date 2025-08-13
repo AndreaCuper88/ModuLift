@@ -10,4 +10,10 @@ router.get(
     dashboardController.getActiveUsers
 );
 
+// [GET] /api/admin/dashboard/getCountPiani → Recupera tutti piani creati durante la settimana corrente e li conta (solo admin)
+router.get(
+    '/getCountPiani',
+    dashboardController.getCountPiani
+);
+
 module.exports = router;
