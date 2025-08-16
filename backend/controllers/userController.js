@@ -2,6 +2,8 @@ const Utente = require('../models/userModel');
 const RefreshToken = require('../models/refreshTokenModel');
 const jwt = require('jsonwebtoken');
 
+const { calcAge } = require('../utils/calcAge');
+
 const generateToken = require('../utils/generateToken');    //Richiamo la funzione per generare i token
 
 exports.createUser = async (req, res) => {
@@ -122,4 +124,31 @@ exports.refreshToken = async (req, res) => {
         console.error("Errore nel refresh del token: ",err);
         return res.status(500).json({errore: 'Errore interno del server'});
     }
-}
+};
+
+exports.getAge = async (req, res) => {
+    try {
+        const { userId } = req.params; // /api/admin/utenti/:userId/getAge
+
+        //Quindi la data attuale posso fornirla nella query string per praticità di utilizzo
+        const at = req.query.at ? new Date(req.query.at) : new Date(); //Mentre per query, i dati provengono dalla query string (dopo il ?): aggiungi ?at=2023-08-16 ad esempio
+
+        const user = await Utente.findById(userId).select('dataNascita');
+        if (!user) return res.status(404).json({ message: 'Utente non trovato' });
+        if (!user.dataNascita) {
+            return res.status(404).json({ message: 'Data di nascita non disponibile' });
+        }
+
+        const age = calcAge(user.dataNascita, at);
+        // “Print” lato server (facoltativo)
+        console.log(`user=${userId} age=${age} at=${at.toISOString()}`);
+
+        return res.status(200).json({
+            age,                     // anni interi
+            birthDate: user.birthDate,
+            referenceDate: at,
+        });
+    } catch (err) {
+        return res.status(500).json({ message: 'Errore recupero età utente', error: err?.message });
+    }
+};
