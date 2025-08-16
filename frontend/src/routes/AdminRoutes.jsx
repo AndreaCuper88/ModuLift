@@ -53,7 +53,7 @@ export default function AdminRoutes({setAlert}) {
             } />
             <Route path="/admin/misure/:id" element={
                 <AdminGuard>
-                    <GestioneMisureCliente />
+                    <GestioneMisureCliente setAlert={setAlert}/>
                 </AdminGuard>
             } />
         </Routes>

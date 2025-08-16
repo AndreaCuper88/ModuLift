@@ -140,8 +140,6 @@ exports.getAge = async (req, res) => {
         }
 
         const age = calcAge(user.dataNascita, at);
-        // “Print” lato server (facoltativo)
-        console.log(`user=${userId} age=${age} at=${at.toISOString()}`);
 
         return res.status(200).json({
             age,                     // anni interi

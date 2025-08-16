@@ -11,6 +11,7 @@ const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN;
 //Importazione Rotte
 const userRoutes = require('./routers/userRouter');
 const genericRoutes = require('./routers/genericRouter');
+const misureRouter = require('./routers/misureRouter');
 const clienteRouterAdmin = require('./routers/clienteRouter_Admin');
 const editorSchedeRouter = require('./routers/editorSchedeRouter');
 const dashboardAdminRouter = require('./routers/dashboardAdminRouter');
@@ -44,7 +45,8 @@ app.use('/api/admin', requireRoles('admin'));
 app.use('/api/generic', genericRoutes);
 app.use('/api/admin/clienti', clienteRouterAdmin);
 app.use('/api/admin/editorSchede', editorSchedeRouter);
-app.use('/api/admin/pianoAlimentare', pianoAlimentareRouter)
+app.use('/api/admin/pianoAlimentare', pianoAlimentareRouter);
+app.use('/api/admin/misure', misureRouter);
 app.use('/api/admin/dashboard', dashboardAdminRouter);
 
 app.listen(PORT, () => {
