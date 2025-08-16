@@ -100,4 +100,4 @@ MisureSchema.pre('save', function (next) {
 });
 
 
-module.exports = mongoose.model('MisuraPliche', MisureSchema);
+module.exports = mongoose.model('MisuraPliche', MisureSchema, 'misure');

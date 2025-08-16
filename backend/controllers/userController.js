@@ -150,3 +150,30 @@ exports.getAge = async (req, res) => {
         return res.status(500).json({ message: 'Errore recupero età utente', error: err?.message });
     }
 };
+
+exports.getSex = async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        const user = await Utente.findById(userId).select('sesso');
+        if (!user) return res.status(404).json({ message: 'Utente non trovato' });
+        if (!user.sesso) {
+            return res.status(404).json({ message: 'Sesso non disponibile per questo utente' });
+        }
+
+        // Normalizzazione: accetta 'male'/'female' oppure 'm'/'f'
+        const raw = String(user.sesso).trim().toLowerCase();
+        const normalized = raw === 'm' ? 'male' : raw === 'f' ? 'female' : raw;
+
+        if (!['male', 'female'].includes(normalized)) {
+            return res.status(422).json({
+                message: 'Valore sesso non riconosciuto',
+                raw: user.sesso,
+            });
+        }
+
+        return res.status(200).json({ sex: normalized });
+    } catch (err) {
+        return res.status(500).json({ message: 'Errore recupero sesso utente', error: err?.message });
+    }
+};

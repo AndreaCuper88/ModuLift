@@ -22,5 +22,9 @@ router.post('/refresh-token', userController.refreshToken);
 router.get('/:userId/getAge', userController.getAge);
 
 
+//Rotta per ottenere l'età dell'utente
+router.get('/:userId/getSex', userController.getSex);
+
+
 
  module.exports = router;
