@@ -2,7 +2,7 @@ const Utente = require('../models/userModel');
 const RefreshToken = require('../models/refreshTokenModel');
 const jwt = require('jsonwebtoken');
 
-const { calcAge } = require('../utils/calcAge');
+const { calcAge } = require('../utils/calcAge')
 
 const generateToken = require('../utils/generateToken');    //Richiamo la funzione per generare i token
 

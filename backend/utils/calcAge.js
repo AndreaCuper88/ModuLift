@@ -1,5 +1,4 @@
-
-export function calcAge(birthDate, at = new Date()) {
+function calcAge(birthDate, at = new Date()) {
     const b = birthDate instanceof Date ? birthDate : new Date(birthDate); //Controllo sul formato
     const r = at instanceof Date ? at : new Date(at);
 
@@ -17,3 +16,5 @@ export function calcAge(birthDate, at = new Date()) {
     if (rMonth < bMonth || (rMonth === bMonth && rDay < bDay)) years--; //Se non li ha ancora compiuti, sottraggo 1 dagli anni
     return years;
 }
+
+module.exports = { calcAge };

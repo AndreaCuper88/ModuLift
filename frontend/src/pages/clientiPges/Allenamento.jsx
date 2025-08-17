@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { Plus, Trash2, Save, RefreshCw, ChevronLeft, ChevronRight, Dumbbell } from "lucide-react";
 import useAuth from "../../hooks/useAuth";
 import {getWorkoutPlanById} from "../../api/clienteApi/allenamentoApi";
+import RestTimer from "../../components/RestTimer";
 
 // ------------------------------------------------------
 // ModuLift – Allenamento (selezione giorno + slider esercizi + log set) – Frontend only
@@ -141,6 +142,27 @@ export default function WorkoutPage({setAlert}) {
 
     const dayLabel = (key) => `Giorno ${key.split('-')[1]}`;
 
+    //Gestione timer
+    const [playing, setPlaying] = useState(false);
+    const [resetNonce, setResetNonce] = useState(0);
+
+    // reset al cambio esercizio
+    useEffect(() => {
+        setPlaying(false);
+        setResetNonce(n => n + 1);
+    }, [currentItem?.uid]);
+
+    const handleTap = () => {
+        if (!playing) {
+            // 1° tap: avvia
+            setPlaying(true);
+        } else {
+            // 2° tap: reset e fermo
+            setPlaying(false);
+            setResetNonce(n => n + 1);
+        }
+    };
+
     return (
         <div className="min-h-screen w-full bg-gradient-to-b from-white via-amber-50 to-white text-gray-900">
             <div className="mx-auto max-w-5xl px-4 py-8">
@@ -220,17 +242,43 @@ export default function WorkoutPage({setAlert}) {
                         </div>
                     </div>
 
-                    {/* Note esercizio */}
                     <div className="p-4">
-                        <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2">
-                            <div className="mb-1 text-xs font-medium uppercase tracking-wide text-gray-500">
-                                Note esercizio
+                        <div className="flex items-start justify-between gap-4 md:gap-6">
+                            {/* NOTE  */}
+                            <div className="flex-1">
+                                <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2">
+                                    <div className="mb-1 text-[11px] md:text-xs font-medium uppercase tracking-wide text-gray-500">
+                                        Note esercizio
+                                    </div>
+                                    <p className="text-xs md:text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">
+                                        {currentItem?.notes || "—"}
+                                    </p>
+                                </div>
                             </div>
-                            <p className="text-sm text-gray-800 whitespace-pre-wrap">
-                                {currentItem?.notes || "—"}
-                            </p>
+
+                            {/* TIMER  */}
+                            <div className="shrink-0 text-center select-none">
+                                <div
+                                    role="button"
+                                    className="cursor-pointer inline-block"
+                                    onClick={handleTap}
+                                    title={playing ? "Reset" : "Start"}
+                                >
+                                    <RestTimer
+                                        seconds={Number(currentItem?.rest ?? 90)}
+                                        playing={playing}
+                                        resetKey={`${currentItem?.uid}-${resetNonce}`} // cambia => reset
+                                        size={80}
+                                        strokeWidth={6}
+                                    />
+                                </div>
+                                <div className="mt-1 text-[10px] text-gray-500">
+                                    {playing ? "Tocca per reset" : "Tocca per avviare"}
+                                </div>
+                            </div>
                         </div>
                     </div>
+
 
 
 
