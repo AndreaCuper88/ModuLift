@@ -20,6 +20,7 @@ const uploadsRouter = require('./routers/uploadsRouter');
 
 //Import router clienti
 const utilsRouter = require('./routers/clienteRouters/utilsRouter');
+const trainingRouter = require('./routers/clienteRouters/trainingRouter');
 
 //Import middlewares
 const verifyToken = require('./middlewares/verifyToken');
@@ -53,7 +54,7 @@ app.use('/api/admin/misure', misureRouter);
 app.use('/api/admin/dashboard', dashboardAdminRouter);
 app.use('/api/cliente', requireRoles('cliente'));
 app.use('/api/cliente/utils', utilsRouter);
-
+app.use('/api/cliente/workout',trainingRouter)
 
 app.listen(PORT, () => {
     console.log(`Server avviato su http://localhost:${PORT}`);
