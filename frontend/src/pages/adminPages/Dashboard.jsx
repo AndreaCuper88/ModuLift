@@ -1,7 +1,7 @@
 import { FaUsers, FaDumbbell, FaUtensils } from 'react-icons/fa';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 
-import {getClienti, getCountPiani} from "../../api/dashboardAdminApi";
+import {getClienti, getCountPiani} from "../../api/adminApi/dashboardAdminApi";
 import useAuth from "../../hooks/useAuth";
 import {useEffect, useState} from "react";
 

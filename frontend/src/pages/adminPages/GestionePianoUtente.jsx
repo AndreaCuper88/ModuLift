@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import UserCard from "../../components/UserCard";
 import {useParams} from "react-router-dom";
 import useAuth from "../../hooks/useAuth";
-import {savePianoAlimentare, getLatestPiano} from "../../api/pianoAlimentareApi";
+import {savePianoAlimentare, getLatestPiano} from "../../api/adminApi/pianoAlimentareApi";
 
 // ------------------------------------------------------
 // ModuLift – Editor Piano Alimentare

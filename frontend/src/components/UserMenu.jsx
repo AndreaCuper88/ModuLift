@@ -1,7 +1,7 @@
 import useAuth from "../hooks/useAuth";
 
 export default function UserMenu({setAlert}) {
-    const { auth, logout } = useAuth();
+    const { logout } = useAuth();
 
     const handleLogout = async () => {
         await logout();

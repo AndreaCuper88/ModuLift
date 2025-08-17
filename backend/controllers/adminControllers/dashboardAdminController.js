@@ -1,7 +1,5 @@
-const Utente = require('../models/userModel');
-const Exercise = require('../models/exerciseModel');
-const WorkoutPlan = require('../models/planModel');
-const mongoose = require('mongoose');
+const Utente = require('../../models/userModel');
+const WorkoutPlan = require('../../models/planModel');
 
 exports.getCountPiani = async (req, res) => {
     try {

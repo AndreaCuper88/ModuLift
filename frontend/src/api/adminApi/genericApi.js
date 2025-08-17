@@ -1,4 +1,4 @@
-import axios from "../../src/api/axiosInstance";
+import axios from "../axiosInstance";
 
 // [GET] /api/admin/generic/getCliente
 export const getCliente = async (id,token) => {

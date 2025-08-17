@@ -1,4 +1,4 @@
-import axios from "../../src/api/axiosInstance";
+import axios from "../axiosInstance";
 
 // [GET] /api/users/:userId/getAge ed eventualmente ?at=2023-08-16
 export const getUserAge = async (userId, at, token) => {

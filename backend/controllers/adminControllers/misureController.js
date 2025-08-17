@@ -1,4 +1,4 @@
-const MisuraPliche = require('../models/misureModel');
+const MisuraPliche = require('../../models/misureModel');
 
 
 

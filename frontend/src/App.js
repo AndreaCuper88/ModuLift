@@ -16,7 +16,7 @@ import PublicRoutes from "./routes/PublicRoutes";
 import useAuth from "../src/hooks/useAuth";
 
 export default function App() {
-    const { auth } = useAuth();
+    const { logout } = useAuth();
     //Gestione alert globale
     const [alert, setAlert] = useState({message: '', type: ''});
 
@@ -32,7 +32,7 @@ export default function App() {
 
     useEffect(() => {
         const handleLogout = () => {
-            auth.logout();
+            logout();
         };
 
         window.addEventListener("forceLogout", handleLogout); //Ascolto l'evento forceLogout

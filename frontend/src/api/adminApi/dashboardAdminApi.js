@@ -1,4 +1,4 @@
-import axios from "../../src/api/axiosInstance";
+import axios from "../axiosInstance";
 
 export const getCountPiani = async (token) =>{
     try {

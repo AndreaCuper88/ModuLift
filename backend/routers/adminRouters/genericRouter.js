@@ -1,5 +1,5 @@
 const express = require('express');
-const genericController = require("../controllers/genericController");
+const genericController = require("../../controllers/adminControllers/genericController");
 
 const router = express.Router();
 

@@ -1,5 +1,5 @@
 const express = require('express');
-const misureController = require("../controllers/misureController");
+const misureController = require("../../controllers/adminControllers/misureController");
 
 const router = express.Router();
 

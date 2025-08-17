@@ -1,4 +1,4 @@
-const Utente = require('../models/userModel');
+const Utente = require('../../models/userModel');
 
 // [GET] /api/admin/getCliente
 exports.getCliente = async (req, res) => {

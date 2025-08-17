@@ -3,7 +3,7 @@ import { Plus, Save, RefreshCw } from "lucide-react";
 import { useParams } from "react-router-dom";
 import UserCard from "../../components/UserCard";
 
-import {getEntriesByUser, getUserAge, getUserSex, getUserHeight, upsertMisure} from "../../api/misureApi";
+import {getEntriesByUser, getUserAge, getUserSex, getUserHeight, upsertMisure} from "../../api/adminApi/misureApi";
 import useAuth from "../../hooks/useAuth";
 
 const { estimateBfJP3 } = require('../../utils/estimateBodyFat');

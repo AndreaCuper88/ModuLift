@@ -1,4 +1,4 @@
-const Utente = require('../models/userModel');
+const Utente = require('../../models/userModel');
 const mongoose = require('mongoose');
 
 // [GET] /api/clienti - Solo per admin

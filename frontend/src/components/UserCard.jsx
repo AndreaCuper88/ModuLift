@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { getCliente } from "../api/genericApi";
+import { getCliente } from "../api/adminApi/genericApi";
 import useAuth from "../hooks/useAuth";
 import {FaUser} from "react-icons/fa";
 
 export default function UserCard({ idUtente }) {
     const { auth } = useAuth();
-    const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
     const [user, setUser] = useState(null);
     const [loadingUser, setLoadingUser] = useState(true);

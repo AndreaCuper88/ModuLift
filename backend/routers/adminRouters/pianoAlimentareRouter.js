@@ -1,5 +1,5 @@
 const express = require('express');
-const pianoAlimentare = require("../controllers/pianoAlimentareController");
+const pianoAlimentare = require("../../controllers/adminControllers/pianoAlimentareController");
 
 const router = express.Router();
 

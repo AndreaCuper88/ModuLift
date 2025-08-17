@@ -10,13 +10,16 @@ const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN;
 
 //Importazione Rotte
 const userRoutes = require('./routers/userRouter');
-const genericRoutes = require('./routers/genericRouter');
-const misureRouter = require('./routers/misureRouter');
-const clienteRouterAdmin = require('./routers/clienteRouter_Admin');
-const editorSchedeRouter = require('./routers/editorSchedeRouter');
-const dashboardAdminRouter = require('./routers/dashboardAdminRouter');
-const pianoAlimentareRouter = require('./routers/pianoAlimentareRouter');
+const genericRoutes = require('./routers/adminRouters/genericRouter');
+const misureRouter = require('./routers/adminRouters/misureRouter');
+const clienteRouterAdmin = require('./routers/adminRouters/clienteRouter_Admin');
+const editorSchedeRouter = require('./routers/adminRouters/editorSchedeRouter');
+const dashboardAdminRouter = require('./routers/adminRouters/dashboardAdminRouter');
+const pianoAlimentareRouter = require('./routers/adminRouters/pianoAlimentareRouter');
 const uploadsRouter = require('./routers/uploadsRouter');
+
+//Import router clienti
+const utilsRouter = require('./routers/clienteRouters/utilsRouter');
 
 //Import middlewares
 const verifyToken = require('./middlewares/verifyToken');
@@ -48,6 +51,9 @@ app.use('/api/admin/editorSchede', editorSchedeRouter);
 app.use('/api/admin/pianoAlimentare', pianoAlimentareRouter);
 app.use('/api/admin/misure', misureRouter);
 app.use('/api/admin/dashboard', dashboardAdminRouter);
+app.use('/api/cliente', requireRoles('cliente'));
+app.use('/api/cliente/utils', utilsRouter);
+
 
 app.listen(PORT, () => {
     console.log(`Server avviato su http://localhost:${PORT}`);

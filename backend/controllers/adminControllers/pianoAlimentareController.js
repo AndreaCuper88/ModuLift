@@ -1,5 +1,4 @@
-const mongoose = require('mongoose');
-const PianoAlimentare = require('../models/pianoAlimentareModel');
+const PianoAlimentare = require('../../models/pianoAlimentareModel');
 
 exports.createOrUpdateLatestPiano = async (req, res) => {
     try {

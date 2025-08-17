@@ -3,7 +3,7 @@ import { FaUser, FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
 import useAuth from "../../hooks/useAuth";
-import {getClienti, deleteCliente, disableCliente} from "../../api/clientiApi";
+import {getClienti, deleteCliente, disableCliente} from "../../api/adminApi/clientiApi";
 
 import ClienteActionModal from "../../components/ClienteActionModal";
 

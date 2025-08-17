@@ -1,15 +1,40 @@
-import React,{useState} from "react";
+import React, {useCallback, useEffect, useState} from "react";
 import { Link } from 'react-router-dom';
 import logo from '../assets/ModuLift_Logo.png';
 import LoginDropdown from '../components/LoginDropdown';
 import useAuth from "../hooks/useAuth";
 import UserMenu from "../components/UserMenu";
+import {getMyLatestPiano} from "../api/clienteApi/utilsApi";
+import {createSearchParams} from "react-router-dom";
 
 
 export default function Navbar({setAlert}) {
     const { auth } = useAuth();
 
     const [isOpen, setIsOpen] = useState(false);
+    const [plan, setPlan] = useState({});
+
+    const loadMyLatestPlan = useCallback(async () => {
+        try {
+            const data = await getMyLatestPiano(auth.accessToken);
+            setPlan(prev => ({
+                ...prev,
+                planId: data?._id ?? data?.id ?? ""
+            }));
+        } catch (e) {
+            if (auth.user) {
+                if (e.status === 404) {
+                    setPlan(null);
+                    setAlert({ message: "Nessun piano trovato per questo utente", type: "danger" });
+                } else {
+                    setAlert({ message: e.message || "Errore caricamento piano", type: "danger" });
+                }
+            }
+        }
+    }, [auth.accessToken]);
+    useEffect(() => {
+        loadMyLatestPlan();
+    }, [loadMyLatestPlan]);
 
     return (
         <nav className="bg-light">
@@ -63,6 +88,17 @@ export default function Navbar({setAlert}) {
                                         className="rounded-md px-3 py-2 text-base font-medium text-black hover:text-gray-700"
                                     >
                                         Clienti
+                                    </Link>
+                                )}
+                                {auth.user?.ruolo === 'cliente' && (
+                                    <Link
+                                        to={{
+                                            pathname: "/cliente/allenamento",
+                                            search: createSearchParams(plan).toString(),
+                                        }}
+                                        className="rounded-md px-3 py-2 text-base font-medium text-black hover:text-gray-700"
+                                    >
+                                        Allenamento
                                     </Link>
                                 )}
                             </div>

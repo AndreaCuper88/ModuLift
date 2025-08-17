@@ -1,4 +1,4 @@
-import axios from "../../src/api/axiosInstance";
+import axios from "../axiosInstance";
 
 export const savePianoAlimentare = async (token, data) => {
     try {

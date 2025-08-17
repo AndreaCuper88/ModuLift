@@ -1,6 +1,6 @@
 import React, {useEffect, useMemo, useState} from "react";
 import { Plus, Trash2, Search, ClipboardList, ChevronUp, ChevronDown, X } from "lucide-react";
-import {deleteExercise, getExercises, upsertPlan, loadPlan } from "../../api/editorSchedeApi";
+import {deleteExercise, getExercises, upsertPlan, loadPlan } from "../../api/adminApi/editorSchedeApi";
 import {useParams} from "react-router-dom";
 import { v4 as uuidv4 } from 'uuid';
 import useAuth from "../../hooks/useAuth";

@@ -1,5 +1,5 @@
-const Exercise = require('../models/exerciseModel');
-const WorkoutPlan = require('../models/planModel');
+const Exercise = require('../../models/exerciseModel');
+const WorkoutPlan = require('../../models/planModel');
 const mongoose = require('mongoose');
 
 // [GET] /api/editorSchede/getExercises

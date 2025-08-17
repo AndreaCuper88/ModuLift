@@ -1,7 +1,7 @@
 // src/components/ExerciseModal.jsx
 import React, { useEffect, useState } from "react";
 import { X } from "lucide-react";
-import { uploadExerciseImage, createExercise } from "../../src/api/editorSchedeApi";
+import { uploadExerciseImage, createExercise } from "../api/adminApi/editorSchedeApi";
 
 const MUSCLES = [
     "petto",

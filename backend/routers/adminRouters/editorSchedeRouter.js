@@ -1,5 +1,5 @@
 const express = require('express');
-const editorController = require("../controllers/editorSchedeController");
+const editorController = require("../../controllers/adminControllers/editorSchedeController");
 
 const router = express.Router();
 
