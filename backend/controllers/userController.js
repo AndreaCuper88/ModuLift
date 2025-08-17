@@ -177,3 +177,18 @@ exports.getSex = async (req, res) => {
         return res.status(500).json({ message: 'Errore recupero sesso utente', error: err?.message });
     }
 };
+
+exports.getHeight = async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        const user = await Utente.findById(userId).select('altezza');
+        if (!user) return res.status(404).json({ message: 'Utente non trovato' });
+        if (!user.altezza) {
+            return res.status(404).json({ message: 'Altezza non disponibile per questo utente' });
+        }
+        return res.status(200).json(user.altezza);
+    } catch (err) {
+        return res.status(500).json({ message: 'Errore recupero altezza utente', error: err?.message });
+    }
+};

@@ -49,6 +49,11 @@ const utenteSchema = new mongoose.Schema({
         enum: ['M', 'F', 'Altro'],
         required: false
     },
+    altezza: {
+        type: Number,
+        required: false,
+        default: null
+    },
     avatarPath: {
         type: String,
         trim: true,

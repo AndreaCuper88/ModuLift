@@ -35,6 +35,22 @@ export const getUserSex = async (userId, token) => {
         throw e;
     }
 };
+export const getUserHeight = async (userId, token) => {
+    try {
+        const res = await axios.get(
+            `/users/${userId}/getHeight`,
+            {
+                headers: { Authorization: `Bearer ${token}` },
+            }
+        );
+        return res.data; // { altezza }
+    } catch (err) {
+        const msg = err?.response?.data?.message || "Errore recupero sesso utente";
+        const e = new Error(msg);
+        e.status = err?.response?.status;
+        throw e;
+    }
+};
 
 export const upsertMisure = async (payload, token) => {
     try {

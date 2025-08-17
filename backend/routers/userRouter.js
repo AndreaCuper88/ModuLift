@@ -25,6 +25,9 @@ router.get('/:userId/getAge', userController.getAge);
 //Rotta per ottenere l'età dell'utente
 router.get('/:userId/getSex', userController.getSex);
 
+//Rotta per ottenere l'altezza dell'utente
+router.get('/:userId/getHeight', userController.getHeight);
+
 
 
  module.exports = router;
