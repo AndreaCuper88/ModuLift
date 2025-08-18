@@ -2,7 +2,7 @@ import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import { useSearchParams } from "react-router-dom";
 import { Plus, Trash2, Save, RefreshCw, ChevronLeft, ChevronRight, Dumbbell } from "lucide-react";
 import useAuth from "../../hooks/useAuth";
-import {getWorkoutPlanById} from "../../api/clienteApi/allenamentoApi";
+import {getWorkoutPlanById, upsertWorkout} from "../../api/clienteApi/allenamentoApi";
 import RestTimer from "../../components/RestTimer";
 
 // ------------------------------------------------------
@@ -19,21 +19,23 @@ export default function WorkoutPage({setAlert}) {
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
 
-    /*const exercisesCatalog = {
-        "68986448ef7664fa8d278943": { name: "Panca piana bilanciere", imageUrl: "https://picsum.photos/seed/panca/96/96" },
-        "6898717f9b16d4bb39231776": { name: "Rematore bilanciere", imageUrl: "https://picsum.photos/seed/rematore/96/96" },
-        "689864b9ef7664fa8d278945": { name: "Back squat", imageUrl: "https://picsum.photos/seed/squat/96/96" },
-        "6899b194516d1dc1eae3a174": { name: "Stacco RDL", imageUrl: "https://picsum.photos/seed/rdl/96/96" },
-        "689872af9b16d4bb392317bc": { name: "Military press", imageUrl: "https://picsum.photos/seed/ohp/96/96" },
-        "689872e39b16d4bb392317c4": { name: "Lat machine", imageUrl: "https://picsum.photos/seed/lat/96/96" },
-    };*/
 
     const [exercisesCatalog, setExercisesCatalog] = useState({});
 
     const [plan, setPlan] = useState({}); //Conterrà il piano di allenamento recuperato dal db
 
-    const dayKeys = useMemo(() => Object.keys(plan.plan || {}).sort((a,b)=>{
-        const na = Number(a.split('-')[1]||0); const nb = Number(b.split('-')[1]||0); return na-nb; }), [plan]);
+    const dayKeys = useMemo(() => {
+        const days = plan?.plan || {};
+        const keys = [];
+        for (let i = 1; ; i++) {
+            const k = `day-${i}`;
+            if (!Object.prototype.hasOwnProperty.call(days, k)) break;
+            const arr = days[k];
+            if (!Array.isArray(arr) || arr.length === 0) break; // Stop al primo "buco"
+            keys.push(k);
+        }
+        return keys;
+    }, [plan]);
     const [dayIndex, setDayIndex] = useState(0);
     const [exIndex, setExIndex] = useState(0);
     const dayKey = dayKeys[dayIndex] || null;
@@ -54,7 +56,7 @@ export default function WorkoutPage({setAlert}) {
             setPlan(data.plan);
             setExercisesCatalog(data.catalog);
             console.log(data);
-            setAlert({ message: "Piano allenamento caricato", type: "success" });
+            //setAlert({ message: "Piano allenamento caricato", type: "success" });
         } catch (e) {
             setPlan(null);
             setAlert({ message: e.message || "Errore caricamento piano", type: "danger" });
@@ -96,7 +98,7 @@ export default function WorkoutPage({setAlert}) {
         try {
             setSaving(true);
             const payload = {
-                planId: plan._id || plan.id || planId,
+                planId: planId,
                 dayId: dayKey,
                 entries: (currentItems || []).map((item) => ({
                     exerciseId: item.exerciseId,
@@ -109,20 +111,18 @@ export default function WorkoutPage({setAlert}) {
                         })),
                 })),
             };
-            if (!API_BASE) {
-                console.log("[FRONTEND ONLY] Logs workout:", payload);
-                return;
-            }
-            const res = await fetch(`${API_BASE}/api/allenamenti/logs`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json", Authorization: `Bearer ${auth?.accessToken ?? ""}` },
-                credentials: "include",
-                body: JSON.stringify(payload),
+
+            const res = await upsertWorkout({
+                token: auth.accessToken,
+                planId,
+                dayId: payload.dayId,
+                entries: payload.entries
             });
-            if (!res.ok) throw new Error("Errore salvataggio log");
+
         } catch (e) {
             console.error(e);
         } finally {
+            setAlert({ message: "Allenamento salvato correttamente", type: "success" });
             setSaving(false);
         }
     }
@@ -175,9 +175,27 @@ export default function WorkoutPage({setAlert}) {
                         <button onClick={loadPlan} className={baseBtn} disabled={loading}>
                             <RefreshCw className="h-4 w-4" /> {loading ? "Carico..." : "Aggiorna"}
                         </button>
-                        <button onClick={saveLogs} className={baseBtn} disabled={saving}>
-                            <Save className="h-4 w-4" /> {saving ? "Salvo..." : "Salva"}
-                        </button>
+                        {saving ? (
+                            <button className={baseBtn} disabled={true}>
+                                <div role="status">
+                                    <svg aria-hidden="true"
+                                         className="w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600"
+                                         viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path
+                                            d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
+                                            fill="currentColor"/>
+                                        <path
+                                            d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
+                                            fill="currentFill"/>
+                                    </svg>
+                                    <span className="sr-only">Loading...</span>
+                                </div>
+                            </button>
+                        ) : (
+                            <button onClick={saveLogs} className={baseBtn} disabled={saving}>
+                                <Save className="h-4 w-4" /> {saving ? "Salvo..." : "Salva"}
+                            </button>
+                        )}
                     </div>
                 </div>
 

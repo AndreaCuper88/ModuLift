@@ -12,3 +12,22 @@ export const getWorkoutPlanById = async (planId, token) => {
         throw e;
     }
 };
+
+export const upsertWorkout = async ({token, planId, dayId, entries}) => {
+    try {
+        const url = `cliente/workout/upsert/${planId}/${dayId}`;
+        const res = await axios.put(
+            url,
+            { entries },
+            {
+                headers: token ? { Authorization: `Bearer ${token}` } : {}
+            }
+        );
+        return res.data; // { planId, dayId, entries, updatedAt }
+    } catch (err) {
+        const msg = err?.response?.data?.error || "Errore salvataggio workout";
+        const e = new Error(msg);
+        e.status = err?.response?.status;
+        throw e;
+    }
+};
