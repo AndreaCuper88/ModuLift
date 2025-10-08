@@ -9,5 +9,7 @@ router.get('/plan/:planId', training.getWorkoutPlanFull);
 
 router.put('/upsert/:planId/:dayId', training.upsertDayEntries);
 
+//router.get("/:planId/todayLogs", training.getTodayLogs);
+
 
 module.exports = router;

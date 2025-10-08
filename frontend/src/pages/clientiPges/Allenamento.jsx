@@ -75,6 +75,7 @@ export default function WorkoutPage({setAlert}) {
             const prevSets = prev[k] || [];
             return { ...prev, [k]: [...prevSets, { weight: "", reps: "" }] };
         });
+        console.log(logs)
     }
 
     function updateSet(exId, i, field, value) {

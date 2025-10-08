@@ -94,7 +94,7 @@ export default function Navbar({setAlert}) {
                                     <Link
                                         to={{
                                             pathname: "/cliente/allenamento",
-                                            search: createSearchParams(plan).toString(),
+                                            search: createSearchParams(plan ?? {}).toString(),
                                         }}
                                         className="rounded-md px-3 py-2 text-base font-medium text-black hover:text-gray-700"
                                     >
