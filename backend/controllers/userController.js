@@ -1,6 +1,7 @@
 const Utente = require('../models/userModel');
 const RefreshToken = require('../models/refreshTokenModel');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 
 const { calcAge } = require('../utils/calcAge')
 
@@ -34,7 +35,8 @@ exports.login = async (req, res) => {
 
     try {
         const user = await Utente.findOne({email});
-        if (!user || !user.comparePassword(password)) {
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!user || !isMatch) {
             return res.status(401).json({dettagli: "Email o pasword non validi!!!"})
         }
 
