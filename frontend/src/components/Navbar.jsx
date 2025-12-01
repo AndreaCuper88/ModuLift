@@ -13,6 +13,7 @@ export default function Navbar({setAlert}) {
 
     const [isOpen, setIsOpen] = useState(false);
     const [plan, setPlan] = useState({});
+    const [loadedPlan, setLoadedPlan] = useState(true);
 
     const loadMyLatestPlan = useCallback(async () => {
         try {
@@ -24,8 +25,8 @@ export default function Navbar({setAlert}) {
         } catch (e) {
             if (auth.user) {
                 if (e.status === 404) {
-                    setPlan(null);
-                    setAlert({ message: "Nessun piano trovato per questo utente", type: "danger" });
+                    setLoadedPlan(false);
+                    //setAlert({ message: "Nessun piano trovato per questo utente", type: "danger" });
                 } else {
                     setAlert({ message: e.message || "Errore caricamento piano", type: "danger" });
                 }
@@ -91,15 +92,35 @@ export default function Navbar({setAlert}) {
                                     </Link>
                                 )}
                                 {auth.user?.ruolo === 'cliente' && (
-                                    <Link
-                                        to={{
-                                            pathname: "/cliente/allenamento",
-                                            search: createSearchParams(plan ?? {}).toString(),
-                                        }}
-                                        className="rounded-md px-3 py-2 text-base font-medium text-black hover:text-gray-700"
-                                    >
-                                        Allenamento
-                                    </Link>
+                                    loadedPlan ? (
+                                        <Link
+                                            to={{
+                                                pathname: "/cliente/allenamento",
+                                                search: createSearchParams(plan ?? {}).toString(),
+                                            }}
+                                            className="rounded-md px-3 py-2 text-base font-medium text-black hover:text-gray-700"
+                                        >
+                                            Allenamento
+                                        </Link>
+                                    ) : (
+                                        <span className="relative group rounded-md px-3 py-2 text-base font-medium text-gray-400 cursor-not-allowed">
+                                            Allenamento
+
+                                            {/* TOOLTIP */}
+                                            <span className="
+                                                absolute left-1/2 -translate-x-1/2 top-[110%]
+                                                bg-gray-800 text-white text-xs px-2 py-1 rounded
+                                                opacity-0 group-hover:opacity-100
+                                                transition-opacity duration-200
+                                                pointer-events-none
+                                                whitespace-nowrap
+                                                z-50
+                                            ">
+                                                Nessun piano disponibile al momento
+                                            </span>
+                                        </span>
+
+                                    )
                                 )}
                             </div>
                         </div>
