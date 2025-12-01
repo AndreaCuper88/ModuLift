@@ -25,6 +25,7 @@ export const AuthProvider = ({ children }) => {
             localStorage.setItem("user", JSON.stringify(user));
         } catch (e) {
             console.error("Errore durante il login: ",e);
+            throw e;
         }
         finally {
             setReady(true);
