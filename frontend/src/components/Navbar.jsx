@@ -17,6 +17,7 @@ export default function Navbar({setAlert}) {
 
     const loadMyLatestPlan = useCallback(async () => {
         try {
+            if (auth.user?.ruolo !== 'cliente') return; //Evito errori nel caso di utente admin che non dovrebbe avere un piano
             const data = await getMyLatestPiano(auth.accessToken);
             setPlan(prev => ({
                 ...prev,

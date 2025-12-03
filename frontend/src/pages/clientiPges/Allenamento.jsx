@@ -6,7 +6,7 @@ import {getWorkoutPlanById, upsertWorkout} from "../../api/clienteApi/allenament
 import RestTimer from "../../components/RestTimer";
 
 // ------------------------------------------------------
-// ModuLift – Allenamento (selezione giorno + slider esercizi + log set) – Frontend only
+// ModuLift – Allenamento (selezione giorno + slider esercizi + log set)
 // ------------------------------------------------------
 
 export default function WorkoutPage({setAlert}) {
@@ -23,6 +23,26 @@ export default function WorkoutPage({setAlert}) {
     const [exercisesCatalog, setExercisesCatalog] = useState({});
 
     const [plan, setPlan] = useState({}); //Conterrà il piano di allenamento recuperato dal db
+
+
+    //Gestione online/offline: capisco se il browser è online o meno
+    const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+    useEffect(() => {
+        const handleOnline = () => setIsOnline(true);
+        const handleOffline = () => setIsOnline(false);
+
+        window.addEventListener("online", handleOnline);
+        window.addEventListener("offline", handleOffline);
+
+        return () => {
+            window.removeEventListener("online", handleOnline);
+            window.removeEventListener("offline", handleOffline);
+        };
+    }, []);
+
+    //Fine gestione online/offline
+
 
     const dayKeys = useMemo(() => {
         const days = plan?.plan || {};
@@ -50,20 +70,45 @@ export default function WorkoutPage({setAlert}) {
 
     const loadPlan = useCallback(async () => {
         if (!planId) return;
+        //Se OFFLINE
+        //console.log(isOnline);
+        const cacheKey = `workoutPlan_${planId}`;
+
+        if (!isOnline) {
+            console.log("Aura");
+            const cached = localStorage.getItem(cacheKey);
+            if (cached) {
+                const parsed = JSON.parse(cached);
+                setPlan(parsed.plan);
+                setExercisesCatalog(parsed.catalog);
+                setAlert({
+                    message: "Sei offline. Carico il piano salvato in locale.",
+                    type: "warning"
+                });
+            } else {
+                setAlert({
+                    message: "Sei offline e non ho ancora una copia locale del piano.",
+                    type: "danger"
+                });
+            }
+            return;
+        }
+
+        //Se ONLINE chiamo l'api normalmente
         try {
             setLoadingPlan(true);
             const data = await getWorkoutPlanById(planId, auth.accessToken);
             setPlan(data.plan);
             setExercisesCatalog(data.catalog);
-            console.log(data);
-            //setAlert({ message: "Piano allenamento caricato", type: "success" });
+            localStorage.setItem(cacheKey, JSON.stringify(data)); //Salvo all'interno di localStorage
         } catch (e) {
             setPlan(null);
             setAlert({ message: e.message || "Errore caricamento piano", type: "danger" });
         } finally {
             setLoadingPlan(false);
         }
-    }, [planId, auth.accessToken]);
+    }, [planId, auth.accessToken, isOnline]);
+
 
     const [logs, setLogs] = useState({});
     const logKey = (dk, exId) => `${dk}|${exId}`;
