@@ -141,22 +141,46 @@ export default function WorkoutPage({setAlert}) {
     }
 
     async function saveLogs() {
+        const payload = {
+            planId: planId,
+            dayId: dayKey,
+            entries: (currentItems || []).map((item) => ({
+                exerciseId: item.exerciseId,
+                uid: item.uid,
+                sets: (getSets(dayKey, item.exerciseId) || [])
+                    .filter((s) => s.weight !== "" || s.reps !== "")
+                    .map((s) => ({
+                        weight: s.weight === "" ? null : Number(String(s.weight).replace(",", ".")),
+                        reps: s.reps === "" ? null : Number(String(s.reps).replace(",", ".")),
+                    })),
+            })),
+        };
+
+        //Se offline metto in coda per salvare
+        if (!isOnline) {
+            const key = "pendingWorkoutLogs";
+            const pending = JSON.parse(localStorage.getItem(key) || "[]");
+
+            pending.push({
+                token: auth.accessToken,
+                payload,
+                createdAt: Date.now(),
+            });
+
+            localStorage.setItem(key, JSON.stringify(pending));
+
+            setAlert({
+                message: "Sei offline. L'allenamento è stato salvato in locale e verrà sincronizzato quando torni online.",
+                type: "warning",
+            });
+
+            return; //
+        }
+
+
+        //Se online salvo
         try {
             setSaving(true);
-            const payload = {
-                planId: planId,
-                dayId: dayKey,
-                entries: (currentItems || []).map((item) => ({
-                    exerciseId: item.exerciseId,
-                    uid: item.uid,
-                    sets: (getSets(dayKey, item.exerciseId) || [])
-                        .filter((s) => s.weight !== "" || s.reps !== "")
-                        .map((s) => ({
-                            weight: s.weight === "" ? null : Number(String(s.weight).replace(",", ".")),
-                            reps: s.reps === "" ? null : Number(String(s.reps).replace(",", ".")),
-                        })),
-                })),
-            };
 
             const res = await upsertWorkout({
                 token: auth.accessToken,
@@ -208,6 +232,55 @@ export default function WorkoutPage({setAlert}) {
             setResetNonce(n => n + 1);
         }
     };
+
+
+    //Sincronizzazione salvataggi una volta ritornato online
+    useEffect(() => {
+        function trySync() {
+            if (!isOnline) return;
+
+            const key = "pendingWorkoutLogs";
+            const pending = JSON.parse(localStorage.getItem(key) || "[]");
+            if (!pending.length) return;
+
+            (async () => {
+                const remaining = [];
+
+                for (const item of pending) {
+                    try {
+                        await upsertWorkout({
+                            token: item.token,
+                            planId: item.payload.planId,
+                            dayId: item.payload.dayId,
+                            entries: item.payload.entries,
+                        });
+                    } catch (e) {
+                        console.error("Errore sync log:", e);
+                        // Se fallisce, lo tengo
+                        remaining.push(item);
+                    }
+                }
+
+                localStorage.setItem(key, JSON.stringify(remaining));
+
+                if (remaining.length === 0) {
+                    setAlert({
+                        message: "Allenamenti offline sincronizzati con successo.",
+                        type: "success",
+                    });
+                }
+            })();
+        }
+
+        // Evento browser
+        window.addEventListener("online", trySync);
+
+        // Sync immediato se è già online
+        trySync();
+
+        return () => window.removeEventListener("online", trySync);
+    }, [auth.accessToken]);
+
 
     return (
         <div className="min-h-screen w-full bg-gradient-to-b from-white via-amber-50 to-white text-gray-900">
