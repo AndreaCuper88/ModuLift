@@ -8,35 +8,68 @@ import {getMyLatestPiano} from "../api/clienteApi/utilsApi";
 import {createSearchParams} from "react-router-dom";
 
 
-export default function Navbar({setAlert}) {
+export default function Navbar({ setAlert }) {
     const { auth } = useAuth();
 
     const [isOpen, setIsOpen] = useState(false);
-    const [plan, setPlan] = useState({});
-    const [loadedPlan, setLoadedPlan] = useState(true);
+
+    // Inizializzo da localStorage: così se ricarico offline ho già il planId
+    const storedPlanId = localStorage.getItem("latestPlanId");
+
+    const [plan, setPlan] = useState(
+        storedPlanId ? { planId: storedPlanId } : null
+    );
+
+    const [loadedPlan, setLoadedPlan] = useState(!!storedPlanId);
+
 
     const loadMyLatestPlan = useCallback(async () => {
         try {
-            if (auth.user?.ruolo !== 'cliente') return; //Evito errori nel caso di utente admin che non dovrebbe avere un piano
+            if (auth.user?.ruolo !== "cliente") return;
+
+            // Se sono offline NON tocco nulla, mantengo il plan salvato
+            if (!navigator.onLine) {
+                console.log("[Navbar] Offline, mantengo latestPlanId:", plan?.planId);
+                return;
+            }
+
+
             const data = await getMyLatestPiano(auth.accessToken);
-            setPlan(prev => ({
-                ...prev,
-                planId: data?._id ?? data?.id ?? ""
-            }));
+            const latestId = data?._id ?? data?.id ?? "";
+
+            if (latestId) {
+                setPlan({ planId: latestId });
+                setLoadedPlan(true);
+                localStorage.setItem("latestPlanId", latestId);
+            } else {
+                setPlan(null);
+                setLoadedPlan(false);
+                localStorage.removeItem("latestPlanId");
+            }
+
         } catch (e) {
             if (auth.user) {
                 if (e.status === 404) {
+                    setPlan(null);
                     setLoadedPlan(false);
-                    //setAlert({ message: "Nessun piano trovato per questo utente", type: "danger" });
                 } else {
+                    // NON azzero plan: tengo quello vecchio se c'è
+                    setLoadedPlan(!!plan?.planId);
                     setAlert({ message: e.message || "Errore caricamento piano", type: "danger" });
                 }
             }
         }
     }, [auth.accessToken]);
+
     useEffect(() => {
         loadMyLatestPlan();
     }, [loadMyLatestPlan]);
+
+    useEffect(() => {
+        console.log("Plan aggiornato:", plan?.planId);
+    }, [plan]);
+
+
 
     return (
         <nav className="bg-light">
@@ -97,7 +130,7 @@ export default function Navbar({setAlert}) {
                                         <Link
                                             to={{
                                                 pathname: "/cliente/allenamento",
-                                                search: createSearchParams(plan ?? {}).toString(),
+                                                search: createSearchParams({ planId: plan.planId }).toString(),
                                             }}
                                             className="rounded-md px-3 py-2 text-base font-medium text-black hover:text-gray-700"
                                         >

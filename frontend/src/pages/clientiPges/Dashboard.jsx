@@ -108,7 +108,7 @@ export default function ClientDashboard() {
                         <p className="text-sm text-gray-500">Quadro generale aggiornato</p>
                     </div>
                     <div className="flex items-center gap-4">
-                        <UserCard idUtente={auth.user.id} />
+                        <UserCard idUtente={auth.user?.id} />
                         <button onClick={loadDashboard} className={baseBtn} disabled={loading}>
                             <RefreshCw className="h-4 w-4" /> {loading ? "Aggiorno..." : "Aggiorna"}
                         </button>

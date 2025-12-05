@@ -13,7 +13,11 @@ export default function WorkoutPage({setAlert}) {
     const { auth } = useAuth();
     const API_BASE = process.env.REACT_APP_API_BASE_URL;
     const [search] = useSearchParams();
-    const planId = search.get("planId") || search.get("id") || "template";
+
+    const urlPlanId = search.get("planId") || search.get("id");
+    const storedPlanId = localStorage.getItem("latestPlanId");
+    const planId = urlPlanId || storedPlanId || "template";
+
     const [loadingPlan, setLoadingPlan] = useState(false);
 
     const [loading, setLoading] = useState(false);
@@ -22,7 +26,7 @@ export default function WorkoutPage({setAlert}) {
 
     const [exercisesCatalog, setExercisesCatalog] = useState({});
 
-    const [plan, setPlan] = useState({}); //Conterrà il piano di allenamento recuperato dal db
+    const [plan, setPlan] = useState(null); //Conterrà il piano di allenamento recuperato dal db
 
 
     //Gestione online/offline: capisco se il browser è online o meno
@@ -71,9 +75,7 @@ export default function WorkoutPage({setAlert}) {
     const loadPlan = useCallback(async () => {
         if (!planId) return;
         //Se OFFLINE
-        //console.log(isOnline);
-        const cacheKey = `workoutPlan_${planId}`;
-
+        const cacheKey = `latestPlan`;
         if (!isOnline) {
             console.log("Aura");
             const cached = localStorage.getItem(cacheKey);
@@ -86,6 +88,7 @@ export default function WorkoutPage({setAlert}) {
                     type: "warning"
                 });
             } else {
+                setPlan(null);
                 setAlert({
                     message: "Sei offline e non ho ancora una copia locale del piano.",
                     type: "danger"
@@ -107,6 +110,8 @@ export default function WorkoutPage({setAlert}) {
         } finally {
             setLoadingPlan(false);
         }
+
+        console.log(plan);
     }, [planId, auth.accessToken, isOnline]);
 
 
@@ -176,6 +181,7 @@ export default function WorkoutPage({setAlert}) {
 
             return; //
         }
+
 
 
         //Se online salvo
@@ -281,14 +287,13 @@ export default function WorkoutPage({setAlert}) {
         return () => window.removeEventListener("online", trySync);
     }, [auth.accessToken]);
 
-
     return (
         <div className="min-h-screen w-full bg-gradient-to-b from-white via-amber-50 to-white text-gray-900">
             <div className="mx-auto max-w-5xl px-4 py-8">
                 <div className="mb-6 flex items-center justify-between">
                     <div className="flex flex-col">
                         <h1 className="text-2xl font-semibold md:text-3xl">Allenamento</h1>
-                        <p className="text-sm text-gray-500">Piano: {plan.name || plan._id}</p>
+                        <p className="text-sm text-gray-500">Piano: {plan?._id}</p>
                     </div>
                     <div className="flex items-center gap-2">
                         <button onClick={loadPlan} className={baseBtn} disabled={loading}>
