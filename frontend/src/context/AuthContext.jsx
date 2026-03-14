@@ -45,20 +45,35 @@ export const AuthProvider = ({ children }) => {
         }
     }
 
+    const isTokenExpired = (token) => { //Controllo se il token è scaduto
+        try {
+            const payload = JSON.parse(atob(token.split(".")[1]));
+            return payload.exp * 1000 < Date.now();
+        } catch {
+            return true;
+        }
+    };
+
     useEffect(() => {
         const accessToken = localStorage.getItem("accessToken");
         const storedUser = localStorage.getItem("user");
 
         if (accessToken && storedUser) {
             try {
-                const user = JSON.parse(storedUser);
-                setAuth({ user, accessToken });
+                if (!isTokenExpired(accessToken)) {
+                    const user = JSON.parse(storedUser);
+                    setAuth({ user, accessToken });
+                } else {
+                    localStorage.removeItem("accessToken");
+                    localStorage.removeItem("user");
+                }
             } catch (e) {
                 console.error("Errore nel parsing dell'utente:", e);
                 localStorage.removeItem("accessToken");
                 localStorage.removeItem("user");
             }
         }
+
         setReady(true);
     }, []);
 
