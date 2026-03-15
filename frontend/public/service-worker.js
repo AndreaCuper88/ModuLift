@@ -67,7 +67,7 @@ self.addEventListener("fetch", (event) => {
     if (
         (
             url.origin === self.location.origin ||
-            url.pathname.startsWith("/uploads/")
+            url.pathname.startsWith("/uploads/") //Per le immagini
         ) &&
         (
             request.destination === "script" ||
