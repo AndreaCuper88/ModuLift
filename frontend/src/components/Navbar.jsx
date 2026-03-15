@@ -22,6 +22,21 @@ export default function Navbar({ setAlert }) {
 
     const [loadedPlan, setLoadedPlan] = useState(!!storedPlanId);
 
+    const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+    useEffect(() => {
+        const handleOnline = () => setIsOnline(true);
+        const handleOffline = () => setIsOnline(false);
+
+        window.addEventListener("online", handleOnline);
+        window.addEventListener("offline", handleOffline);
+
+        return () => {
+            window.removeEventListener("online", handleOnline);
+            window.removeEventListener("offline", handleOffline);
+        };
+    }, []);
+
 
     const loadMyLatestPlan = useCallback(async () => {
         if (auth.user?.ruolo !== "cliente") return;
@@ -75,7 +90,6 @@ export default function Navbar({ setAlert }) {
     useEffect(() => {
         console.log("Plan aggiornato:", plan?.planId);
     }, [plan]);
-
 
 
     return (
@@ -168,6 +182,13 @@ export default function Navbar({ setAlert }) {
                     </div>
 
                     <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
+                        <span
+                            className={`mr-3 text-sm font-semibold ${
+                                isOnline ? "text-green-600" : "text-red-600"
+                            }`}
+                        >
+                            {isOnline ? "Online" : "Offline"}
+                        </span>
                         <button
                             type="button"
                             className="relative rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white"
