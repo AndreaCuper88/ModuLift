@@ -180,7 +180,6 @@ export default function Navbar({ setAlert }) {
                             </div>
                         </div>
                     </div>
-
                     <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
                         <span
                             className={`mr-3 text-sm font-semibold ${
