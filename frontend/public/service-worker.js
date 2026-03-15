@@ -65,7 +65,10 @@ self.addEventListener("fetch", (event) => {
 
     // 4) Asset statici SAME-ORIGIN (JS, CSS, immagini, font) → cache first
     if (
-        url.origin === self.location.origin &&
+        (
+            url.origin === self.location.origin ||
+            url.pathname.startsWith("/uploads/")
+        ) &&
         (
             request.destination === "script" ||
             request.destination === "style" ||
