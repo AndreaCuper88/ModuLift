@@ -60,10 +60,17 @@ export const AuthProvider = ({ children }) => {
 
         if (accessToken && storedUser) {
             try {
+                const user = JSON.parse(storedUser);
+
                 if (!isTokenExpired(accessToken)) {
-                    const user = JSON.parse(storedUser);
+                    // Token valido → tutto normale
+                    setAuth({ user, accessToken });
+                } else if (!navigator.onLine) {
+                    // Token scaduto MA offline → tieni l'utente loggato
+                    // I componenti useranno la cache, l'interceptor gestirà il 401
                     setAuth({ user, accessToken });
                 } else {
+                    // Token scaduto e online → pulisci, dovrà riloggarsi
                     localStorage.removeItem("accessToken");
                     localStorage.removeItem("user");
                 }

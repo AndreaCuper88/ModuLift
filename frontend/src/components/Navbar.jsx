@@ -24,16 +24,21 @@ export default function Navbar({ setAlert }) {
 
 
     const loadMyLatestPlan = useCallback(async () => {
+        if (auth.user?.ruolo !== "cliente") return;
+        if (!auth.accessToken) return;
+
+        const cached = localStorage.getItem("latestPlanId");
+        if (cached) {
+            setPlan({ planId: cached });
+            setLoadedPlan(true);
+        }
+
+        if (!navigator.onLine) {
+            console.log("[Navbar] Offline → uso cache");
+            return;
+        }
+
         try {
-            if (auth.user?.ruolo !== "cliente") return;
-
-            // Se sono offline NON tocco nulla, mantengo il plan salvato
-            if (!navigator.onLine) {
-                console.log("[Navbar] Offline, mantengo latestPlanId:", plan?.planId);
-                return;
-            }
-
-
             const data = await getMyLatestPiano(auth.accessToken);
             const latestId = data?._id ?? data?.id ?? "";
 
@@ -46,20 +51,22 @@ export default function Navbar({ setAlert }) {
                 setLoadedPlan(false);
                 localStorage.removeItem("latestPlanId");
             }
-
         } catch (e) {
-            if (auth.user) {
+            // Errore di rete o token scaduto → usa la cache silenziosamente
+            if (!cached) {
                 if (e.status === 404) {
                     setPlan(null);
                     setLoadedPlan(false);
                 } else {
-                    // NON azzero plan: tengo quello vecchio se c'è
-                    setLoadedPlan(!!plan?.planId);
-                    setAlert({ message: e.message || "Errore caricamento piano", type: "danger" });
+                    setAlert({
+                        message: e.message || "Errore caricamento piano",
+                        type: "danger"
+                    });
                 }
             }
+            // Se c'era la cache, non fare nulla — il piano rimane visibile
         }
-    }, [auth.accessToken]);
+    }, [auth.accessToken, auth.user]);
 
     useEffect(() => {
         loadMyLatestPlan();

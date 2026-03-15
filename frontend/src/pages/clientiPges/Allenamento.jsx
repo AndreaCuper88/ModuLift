@@ -14,6 +14,11 @@ export default function WorkoutPage({setAlert}) {
     const API_BASE = process.env.REACT_APP_API_BASE_URL;
     const [search] = useSearchParams();
 
+    console.log("component render");
+    console.log("navigator:", navigator);
+    console.log("online:", navigator.onLine);
+
+
     const urlPlanId = search.get("planId") || search.get("id");
     const storedPlanId = localStorage.getItem("latestPlanId");
     const planId = urlPlanId || storedPlanId || "template";
@@ -63,7 +68,7 @@ export default function WorkoutPage({setAlert}) {
     const [dayIndex, setDayIndex] = useState(0);
     const [exIndex, setExIndex] = useState(0);
     const dayKey = dayKeys[dayIndex] || null;
-    const currentItems = dayKey ? plan.plan[dayKey] : [];
+    const currentItems = (dayKey && plan?.plan?.[dayKey]) ? plan.plan[dayKey] : [];
     const currentItem = currentItems[exIndex] || null;
     const currentExerciseMeta = currentItem ? exercisesCatalog[currentItem.exerciseId] : null;
 
@@ -72,47 +77,54 @@ export default function WorkoutPage({setAlert}) {
     const ghostBtn = "inline-flex items-center justify-center rounded-xl p-2 hover:bg-gray-100 text-gray-600";
     const inputClass = "w-20 rounded-lg bg-gray-100 px-3 py-2 text-sm outline-none";
 
+    const loadingRef = useRef(false);
+
     const loadPlan = useCallback(async () => {
-        if (!planId) return;
-        //Se OFFLINE
-        const cacheKey = `latestPlan`;
-        if (!isOnline) {
-            console.log("Aura");
-            const cached = localStorage.getItem(cacheKey);
-            if (cached) {
+        if (loadingRef.current) return; // ← evita chiamate doppie
+        loadingRef.current = true;
+
+        const cacheKey = `plan_${planId}`;
+        const cached = localStorage.getItem(cacheKey);
+
+        if (cached) {
+            try {
                 const parsed = JSON.parse(cached);
                 setPlan(parsed.plan);
                 setExercisesCatalog(parsed.catalog);
-                setAlert({
-                    message: "Sei offline. Carico il piano salvato in locale.",
-                    type: "warning"
-                });
-            } else {
+            } catch (_) {}
+        }
+
+        if (!navigator.onLine) {
+            console.log("offline → uso cache");
+
+            if (!cached) {
                 setPlan(null);
                 setAlert({
-                    message: "Sei offline e non ho ancora una copia locale del piano.",
-                    type: "danger"
+                    message: "Sei offline e non hai dati in cache.",
+                    type: "warning"
                 });
             }
+
+            loadingRef.current = false;
             return;
         }
 
-        //Se ONLINE chiamo l'api normalmente
         try {
-            setLoadingPlan(true);
+            setLoading(true);
             const data = await getWorkoutPlanById(planId, auth.accessToken);
             setPlan(data.plan);
             setExercisesCatalog(data.catalog);
-            localStorage.setItem(cacheKey, JSON.stringify(data)); //Salvo all'interno di localStorage
+            localStorage.setItem(cacheKey, JSON.stringify(data));
         } catch (e) {
-            setPlan(null);
-            setAlert({ message: e.message || "Errore caricamento piano", type: "danger" });
+            if (!cached) {
+                setPlan(null);
+                setAlert({ message: "Errore recupero piano", type: "danger" });
+            }
         } finally {
-            setLoadingPlan(false);
+            setLoading(false);
+            loadingRef.current = false;
         }
-
-        console.log(plan);
-    }, [planId, auth.accessToken, isOnline]);
+    }, [planId, auth.accessToken]);
 
 
     const [logs, setLogs] = useState({});
@@ -286,6 +298,8 @@ export default function WorkoutPage({setAlert}) {
 
         return () => window.removeEventListener("online", trySync);
     }, [auth.accessToken]);
+
+
 
     return (
         <div className="min-h-screen w-full bg-gradient-to-b from-white via-amber-50 to-white text-gray-900">
