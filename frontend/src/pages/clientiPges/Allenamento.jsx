@@ -14,10 +14,6 @@ export default function WorkoutPage({setAlert}) {
     const API_BASE = process.env.REACT_APP_API_BASE_URL;
     const [search] = useSearchParams();
 
-    console.log("component render");
-    console.log("navigator:", navigator);
-    console.log("online:", navigator.onLine);
-
 
     const urlPlanId = search.get("planId") || search.get("id");
     const storedPlanId = localStorage.getItem("latestPlanId");
