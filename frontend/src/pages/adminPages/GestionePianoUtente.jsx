@@ -75,7 +75,7 @@ export default function MealPlanEditor({setAlert}) {
     async function savePlan() {
         try {
             setSaving(true);
-            console.log(aggiornaUltimo);
+            //console.log(aggiornaUltimo);
 
             const res = await savePianoAlimentare(auth.accessToken, {
                 userId: id,
