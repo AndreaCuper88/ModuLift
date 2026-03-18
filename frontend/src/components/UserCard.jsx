@@ -10,6 +10,7 @@ export default function UserCard({ idUtente }) {
     const [loadingUser, setLoadingUser] = useState(true);
 
     useEffect(() => {
+        if (!idUtente || !auth?.accessToken) return; //Evito errori sul reload
         const fetchUser = async () => {
             try {
                 const utente = await getCliente(idUtente, auth.accessToken);

@@ -4,6 +4,11 @@ const Utente = require('../../models/userModel');
 exports.getCliente = async (req, res) => {
     try {
         const {id} = req.params;
+
+        if (!id) {
+            return res.status(400).json({ errore: "ID mancante" });
+        }
+
         const cliente = await Utente.findOne({_id: id}).select("nome cognome avatarPath email");
         if (!cliente) {
             return res.status(404).json({errore: 'Cliente non trovato'});
