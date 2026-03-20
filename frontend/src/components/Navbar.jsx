@@ -22,18 +22,36 @@ export default function Navbar({ setAlert }) {
 
     const [loadedPlan, setLoadedPlan] = useState(!!storedPlanId);
 
-    const [isOnline, setIsOnline] = useState(navigator.onLine);
+    const [isOnline, setIsOnline] = useState(false);
+
+    const checkConnection = async () => {
+        //gstatic.com/generate_204 è un endpoint Google leggero e affidabile
+        //Utilizzato per check di connettività
+        try {
+            await fetch("https://www.gstatic.com/generate_204", {
+                method: "HEAD",
+                cache: "no-cache",
+                mode: "no-cors",
+                signal: AbortSignal.timeout(3000), //Evito attese infinite
+            });
+            setIsOnline(true);
+        } catch (e) {
+            setIsOnline(false);
+        }
+    };
 
     useEffect(() => {
-        const handleOnline = () => setIsOnline(true);
-        const handleOffline = () => setIsOnline(false);
+        checkConnection();
 
-        window.addEventListener("online", handleOnline);
-        window.addEventListener("offline", handleOffline);
+        window.addEventListener("online", checkConnection);
+        window.addEventListener("offline", checkConnection);
+
+        const interval = setInterval(checkConnection, 30000); // polling periodico ogni 30 secondi per rilevare variazioni
 
         return () => {
-            window.removeEventListener("online", handleOnline);
-            window.removeEventListener("offline", handleOffline);
+            window.removeEventListener("online", checkConnection);
+            window.removeEventListener("offline", checkConnection);
+            clearInterval(interval);
         };
     }, []);
 
@@ -87,9 +105,9 @@ export default function Navbar({ setAlert }) {
         loadMyLatestPlan();
     }, [loadMyLatestPlan]);
 
-    useEffect(() => {
+    /*useEffect(() => {
         console.log("Plan aggiornato:", plan?.planId);
-    }, [plan]);
+    }, [plan]);*/
 
 
     return (
@@ -211,13 +229,18 @@ export default function Navbar({ setAlert }) {
                         </div>
                     </div>
                     <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
-                        <span
-                            className={`mr-3 text-sm font-semibold ${
-                                isOnline ? "text-green-600" : "text-red-600"
-                            }`}
-                        >
-                            {isOnline ? "Online" : "Offline"}
-                        </span>
+                        {isOnline === null ? null : (
+                            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold mr-3 transition-all duration-300 ${
+                                    isOnline
+                                        ? "bg-green-100 text-green-700 ring-1 ring-green-300"
+                                        : "bg-red-100 text-red-700 ring-1 ring-red-300"
+                                }`}>
+                                <span className={`w-2 h-2 rounded-full ${
+                                    isOnline ? "bg-green-500 animate-pulse" : "bg-red-500"
+                                }`} />
+                                {isOnline ? "Online" : "Offline"}
+                            </span>
+                        )}
                         <button
                             type="button"
                             className="relative rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white"
