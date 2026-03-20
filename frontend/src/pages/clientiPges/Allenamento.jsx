@@ -4,6 +4,7 @@ import { Plus, Trash2, Save, RefreshCw, ChevronLeft, ChevronRight, Dumbbell } fr
 import useAuth from "../../hooks/useAuth";
 import {getWorkoutPlanById, upsertWorkout} from "../../api/clienteApi/allenamentoApi";
 import RestTimer from "../../components/RestTimer";
+import {db} from "../../db/db";
 
 // ------------------------------------------------------
 // ModuLift – Allenamento (selezione giorno + slider esercizi + log set)
@@ -18,17 +19,9 @@ export default function WorkoutPage({setAlert}) {
     const urlPlanId = search.get("planId") || search.get("id");
     const storedPlanId = localStorage.getItem("latestPlanId");
     const planId = urlPlanId || storedPlanId || "template";
-
-    const [loadingPlan, setLoadingPlan] = useState(false);
-
     const [loading, setLoading] = useState(false);
-    const [saving, setSaving] = useState(false);
-
-
     const [exercisesCatalog, setExercisesCatalog] = useState({});
-
     const [plan, setPlan] = useState(null); //Conterrà il piano di allenamento recuperato dal db
-
 
     //Gestione online/offline: capisco se il browser è online o meno
     const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -133,7 +126,6 @@ export default function WorkoutPage({setAlert}) {
             const prevSets = prev[k] || [];
             return { ...prev, [k]: [...prevSets, { weight: "", reps: "" }] };
         });
-        console.log(logs)
     }
 
     function updateSet(exId, i, field, value) {
@@ -169,47 +161,62 @@ export default function WorkoutPage({setAlert}) {
             })),
         };
 
-        //Se offline metto in coda per salvare
-        if (!isOnline) {
-            const key = "pendingWorkoutLogs";
-            const pending = JSON.parse(localStorage.getItem(key) || "[]");
+        //Salvo sempre in coda
+        const queueId = await db.syncQueue.add({
+            tipo: "workoutProgress",
+            operazione: "update",
+            payload,
+            timestamp: Date.now()
+        });
+        await db.workoutProgress.put({
+            planId,
+            logs,  // salvi tutto il logs state così com'è
+            updatedAt: Date.now()
+        });
 
-            pending.push({
-                token: auth.accessToken,
-                payload,
-                createdAt: Date.now(),
-            });
+        //Se online provo il sync
+        if (isOnline) {
+            try {
+                await upsertWorkout({
+                    token: auth.accessToken,
+                    planId,
+                    dayId: payload.dayId,
+                    entries: payload.entries
+                });
 
-            localStorage.setItem(key, JSON.stringify(pending));
-
-            setAlert({
-                message: "Sei offline. L'allenamento è stato salvato in locale e verrà sincronizzato quando torni online.",
-                type: "warning",
-            });
-
-            return; //
-        }
-
-
-
-        //Se online salvo
-        try {
-            setSaving(true);
-
-            const res = await upsertWorkout({
-                token: auth.accessToken,
-                planId,
-                dayId: payload.dayId,
-                entries: payload.entries
-            });
-
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setAlert({ message: "Allenamento salvato correttamente", type: "success" });
-            setSaving(false);
+                //Rimuovo dalla coda una volta salvato
+                await db.syncQueue.delete(queueId);
+            } catch (e) {
+                console.error(e);
+            }
         }
     }
+
+    const isLoadingLogs = useRef(false);
+    useEffect(() => {
+        async function loadLogs() {
+            isLoadingLogs.current = true;
+            const saved = await db.workoutProgress.get(planId);
+            if (saved?.logs) setLogs(saved.logs);
+            isLoadingLogs.current = false;
+        }
+        loadLogs();
+    }, [planId]);
+
+    const debounceRef = useRef(null);
+
+    useEffect(() => {
+        if (Object.keys(logs).length === 0) return;
+        if (isLoadingLogs.current) return; // ← non salvare durante il caricamento
+
+        clearTimeout(debounceRef.current);
+        debounceRef.current = setTimeout(() => {
+            saveLogs();
+        }, 2000);
+
+        return () => clearTimeout(debounceRef.current);
+    }, [logs]);
+
 
     useEffect(() => {
         loadPlan();
@@ -248,52 +255,52 @@ export default function WorkoutPage({setAlert}) {
     };
 
 
-    //Sincronizzazione salvataggi una volta ritornato online
+    //Sincronizzazione salvataggi
     useEffect(() => {
-        function trySync() {
+        async function trySync() {
             if (!isOnline) return;
 
-            const key = "pendingWorkoutLogs";
-            const pending = JSON.parse(localStorage.getItem(key) || "[]");
-            if (!pending.length) return;
+            const all = await db.syncQueue
+                .where("tipo")
+                .equals("workoutProgress")
+                .toArray();
+            if (!all.length) return;
 
-            (async () => {
-                const remaining = [];
-
-                for (const item of pending) {
-                    try {
-                        await upsertWorkout({
-                            token: item.token,
-                            planId: item.payload.planId,
-                            dayId: item.payload.dayId,
-                            entries: item.payload.entries,
-                        });
-                    } catch (e) {
-                        console.error("Errore sync log:", e);
-                        // Se fallisce, lo tengo
-                        remaining.push(item);
-                    }
-                }
-
-                localStorage.setItem(key, JSON.stringify(remaining));
-
-                if (remaining.length === 0) {
-                    setAlert({
-                        message: "Allenamenti offline sincronizzati con successo.",
-                        type: "success",
+            for (const item of all) {
+                try {
+                    await upsertWorkout({
+                        token: auth.accessToken,
+                        planId: item.payload.planId,
+                        dayId: item.payload.dayId,
+                        entries: item.payload.entries,
                     });
+
+                    // rimuovo dalla queue se ok
+                    await db.syncQueue.delete(item.id);
+
+                } catch (e) {
+                    console.error("Errore sync log:", e);
+                    // lo lascio in queue → retry futuro
                 }
-            })();
+            }
+
+            // opzionale feedback
+            const remaining = await db.syncQueue.count();
+            if (remaining === 0) {
+                setAlert({
+                    message: "Allenamenti offline sincronizzati con successo.",
+                    type: "success",
+                });
+            }
         }
 
-        // Evento browser
         window.addEventListener("online", trySync);
 
-        // Sync immediato se è già online
+        // sync immediato se già online
         trySync();
 
         return () => window.removeEventListener("online", trySync);
-    }, [auth.accessToken]);
+    }, [auth.accessToken, isOnline]);
 
 
 
@@ -309,27 +316,6 @@ export default function WorkoutPage({setAlert}) {
                         <button onClick={loadPlan} className={baseBtn} disabled={loading}>
                             <RefreshCw className="h-4 w-4" /> {loading ? "Carico..." : "Aggiorna"}
                         </button>
-                        {saving ? (
-                            <button className={baseBtn} disabled={true}>
-                                <div role="status">
-                                    <svg aria-hidden="true"
-                                         className="w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600"
-                                         viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path
-                                            d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
-                                            fill="currentColor"/>
-                                        <path
-                                            d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
-                                            fill="currentFill"/>
-                                    </svg>
-                                    <span className="sr-only">Loading...</span>
-                                </div>
-                            </button>
-                        ) : (
-                            <button onClick={saveLogs} className={baseBtn} disabled={saving}>
-                                <Save className="h-4 w-4" /> {saving ? "Salvo..." : "Salva"}
-                            </button>
-                        )}
                     </div>
                 </div>
 
