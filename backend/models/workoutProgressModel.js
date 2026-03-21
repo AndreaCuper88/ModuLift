@@ -23,6 +23,7 @@ const workoutProgressSchema = new Schema({
         of: [entrySchema],
         default: {}
     },
+    sessionId: { type: String, required: true, index: true },
 
     // metadati utili per sync/offline
     etag:          { type: String, default: null },

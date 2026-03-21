@@ -43,17 +43,14 @@ exports.upsertDayEntries = async (req, res) => {
     if (!userId) res.status(404).json({ message: 'Utente non trovato' });
 
     const { planId, dayId } = req.params;
-    const { entries } = req.body || {};
+    const { entries, sessionId } = req.body || {};
 
     if (!Array.isArray(entries)) {
         return res.status(400).json({ message: 'Bad request: errore sulle entries' });
     }
-    const startOfDay = new Date(); startOfDay.setHours(0,0,0,0);
-    const endOfDay   = new Date(); endOfDay.setHours(23,59,59,999);
-
     try {
         const doc = await WorkoutProgress.findOneAndUpdate(
-            { userId, planId, createdAt: { $gte: startOfDay, $lte: endOfDay }},
+            { userId, planId, sessionId}, //sessionId per gestire sessioni separate e dare la possibilità di più workout al giorno
             {
                 $set: {
                     [`days.${dayId}`]: entries

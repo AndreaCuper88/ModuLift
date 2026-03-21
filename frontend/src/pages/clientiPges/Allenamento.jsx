@@ -1,6 +1,6 @@
 import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import { useSearchParams } from "react-router-dom";
-import { Plus, Trash2, Save, RefreshCw, ChevronLeft, ChevronRight, Dumbbell } from "lucide-react";
+import { Plus, Trash2, RefreshCw, ChevronLeft, ChevronRight, Dumbbell } from "lucide-react";
 import useAuth from "../../hooks/useAuth";
 import {getWorkoutPlanById, upsertWorkout} from "../../api/clienteApi/allenamentoApi";
 import RestTimer from "../../components/RestTimer";
@@ -22,6 +22,8 @@ export default function WorkoutPage({setAlert}) {
     const [loading, setLoading] = useState(false);
     const [exercisesCatalog, setExercisesCatalog] = useState({});
     const [plan, setPlan] = useState(null); //Conterrà il piano di allenamento recuperato dal db
+
+    const [sessionActive, setSessionActive] = useState(false); //Per la gestione della sessione del singolo allenamento
 
     //Gestione online/offline: capisco se il browser è online o meno
     const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -149,6 +151,7 @@ export default function WorkoutPage({setAlert}) {
         const payload = {
             planId: planId,
             dayId: dayKey,
+            sessionId: currentSessionId,
             entries: (currentItems || []).map((item) => ({
                 exerciseId: item.exerciseId,
                 uid: item.uid,
@@ -170,6 +173,8 @@ export default function WorkoutPage({setAlert}) {
         });
         await db.workoutProgress.put({
             planId,
+            sessionId: currentSessionId,
+            dayKey,
             logs,  // salvi tutto il logs state così com'è
             updatedAt: Date.now()
         });
@@ -181,6 +186,7 @@ export default function WorkoutPage({setAlert}) {
                     token: auth.accessToken,
                     planId,
                     dayId: payload.dayId,
+                    sessionId: currentSessionId,
                     entries: payload.entries
                 });
 
@@ -193,15 +199,52 @@ export default function WorkoutPage({setAlert}) {
     }
 
     const isLoadingLogs = useRef(false);
+    const hasLoadedLogs = useRef(false);
+
     useEffect(() => {
         async function loadLogs() {
+            if (dayKeys.length === 0) return;   //aspetto che dayKey sia popolato
+            if (hasLoadedLogs.current) return; // gira solo una volta
+            hasLoadedLogs.current = true;
+
             isLoadingLogs.current = true;
-            const saved = await db.workoutProgress.get(planId);
-            if (saved?.logs) setLogs(saved.logs);
+            const saved = await db.workoutProgress
+                .where("planId")
+                .equals(planId)
+                .last();
+            if (saved?.logs) {
+                setLogs(saved.logs);
+                setCurrentSessionId(saved.sessionId);
+                setSessionActive(true);
+                if (saved.dayKey) {
+                    const idx = dayKeys.indexOf(saved.dayKey);
+                    if (idx !== -1) setDayIndex(idx);
+                }
+            }
             isLoadingLogs.current = false;
         }
         loadLogs();
-    }, [planId]);
+    }, [planId, dayKeys]);
+
+    const [currentSessionId, setCurrentSessionId] = useState(null);
+
+    async function startSession() {
+        const sessionId = crypto.randomUUID();
+        setSessionActive(true);
+        setCurrentSessionId(sessionId);
+        await db.workoutProgress.put({ planId, sessionId, dayKey, logs: {}, updatedAt: Date.now() });
+    }
+
+    async function endSession() {
+        await saveLogs();
+        await db.workoutProgress
+            .where("[planId+sessionId]")
+            .equals([planId, currentSessionId])
+            .delete();
+        setLogs({});
+        setSessionActive(false);
+        setCurrentSessionId(null);
+    }
 
     const debounceRef = useRef(null);
 
@@ -272,6 +315,7 @@ export default function WorkoutPage({setAlert}) {
                         token: auth.accessToken,
                         planId: item.payload.planId,
                         dayId: item.payload.dayId,
+                        sessionId: item.payload.sessionId,
                         entries: item.payload.entries,
                     });
 
@@ -320,159 +364,203 @@ export default function WorkoutPage({setAlert}) {
                 </div>
 
                 <div className={`${baseCard} mb-4 p-2 md:p-3`}>
-                    <div className="flex flex-wrap gap-2">
-                        {dayKeys.map((dk, i) => (
-                            <button
-                                key={dk}
-                                onClick={() => { setDayIndex(i); setExIndex(0); }}
-                                className={`rounded-xl px-3 py-2 text-sm font-medium border ${i === dayIndex ? "bg-amber-100 border-amber-200 text-amber-900" : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"}`}
-                            >
-                                {dayLabel(dk)}
+                    <div className="flex items-center justify-between gap-2">
+                        <div className="flex flex-wrap gap-2">
+                            {dayKeys.map((dk, i) => (
+                                <button
+                                    key={dk}
+                                    disabled={sessionActive}
+                                    onClick={() => { setDayIndex(i); setExIndex(0); }}
+                                    className={`rounded-xl px-3 py-2 text-sm font-medium border transition ${
+                                        i === dayIndex
+                                            ? "bg-amber-100 border-amber-200 text-amber-900"
+                                            : sessionActive
+                                                ? "bg-gray-100 border-gray-200 text-gray-300 cursor-not-allowed"
+                                                : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
+                                    }`}
+                                >
+                                    {dayLabel(dk)}
+                                </button>
+                            ))}
+                        </div>
+
+                        {!sessionActive ? (
+                            <button onClick={startSession} className={baseBtn}>
+                                Inizia
                             </button>
-                        ))}
+                        ) : (
+                            <button onClick={endSession} className="inline-flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-medium text-white bg-red-400 hover:bg-red-500 active:bg-red-600 transition">
+                                Termina
+                            </button>
+                        )}
                     </div>
                 </div>
 
-                <div className={`${baseCard} p-0 overflow-hidden`}>
-                    {/* Header esercizio */}
-                    <div className="grid grid-cols-[auto,1fr,auto] items-center gap-4 md:gap-6 border-b border-gray-200 p-4">
-                        <div className="h-28 w-28 md:h-36 md:w-36 overflow-hidden rounded-2xl border border-gray-200 bg-gray-50 flex items-center justify-center shadow-sm">
-                            {currentExerciseMeta?.imagePath ? (
-                                <img
-                                    src={`${API_BASE}/uploads/exercises/${currentExerciseMeta.muscle}/${currentExerciseMeta.imagePath}`}
-                                    alt={currentExerciseMeta?.name || "Esercizio"}
-                                    className="h-full w-full object-cover"
-                                />
-                            ) : (
-                                <Dumbbell className="h-9 w-9 text-gray-400" />
-                            )}
-                        </div>
-
-                        <div className="min-w-0">
-                            <h2 className="text-xl md:text-2xl font-semibold leading-tight truncate">
-                                {currentExerciseMeta?.name || currentItem?.exerciseId || "Nessun esercizio"}
-                            </h2>
-                            {currentItem && (
-                                <p className="mt-2 text-xs md:text-sm text-gray-600">
-                                    Schema: {formatScheme(currentItem.scheme)} · Recupero: {currentItem.rest}s
-                                </p>
-                            )}
-                        </div>
-
-                        <div className="flex items-center gap-1 md:gap-2">
-                            <button
-                                className={ghostBtn}
-                                disabled={exIndex === 0}
-                                onClick={() => setExIndex((i) => Math.max(0, i - 1))}
-                            >
-                                <ChevronLeft className="h-5 w-5" />
-                            </button>
-                            <span className="px-2 py-1 rounded-full border border-gray-200 bg-white text-sm text-gray-600 tabular-nums whitespace-nowrap">
-                                {Math.min(exIndex + 1, currentItems.length)} / {currentItems.length}
-                            </span>
-                            <button
-                                className={ghostBtn}
-                                disabled={exIndex >= currentItems.length - 1}
-                                onClick={() => setExIndex((i) => Math.min(currentItems.length - 1, i + 1))}
-                            >
-                                <ChevronRight className="h-5 w-5" />
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="p-4">
-                        <div className="flex items-start justify-between gap-4 md:gap-6">
-                            {/* NOTE  */}
-                            <div className="flex-1">
-                                <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2">
-                                    <div className="mb-1 text-[11px] md:text-xs font-medium uppercase tracking-wide text-gray-500">
-                                        Note esercizio
-                                    </div>
-                                    <p className="text-xs md:text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">
-                                        {currentItem?.notes || "—"}
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* TIMER  */}
-                            <div className="shrink-0 text-center select-none">
-                                <div
-                                    role="button"
-                                    className="cursor-pointer inline-block"
-                                    onClick={handleTap}
-                                    title={playing ? "Reset" : "Start"}
-                                >
-                                    <RestTimer
-                                        seconds={Number(currentItem?.rest ?? 90)}
-                                        playing={playing}
-                                        resetKey={`${currentItem?.uid}-${resetNonce}`} // cambia => reset
-                                        size={80}
-                                        strokeWidth={6}
+                {sessionActive ? (
+                    <div className={`${baseCard} p-0 overflow-hidden`}>
+                        {/* Header esercizio */}
+                        <div className="grid grid-cols-[auto,1fr,auto] items-center gap-4 md:gap-6 border-b border-gray-200 p-4">
+                            <div className="h-28 w-28 md:h-36 md:w-36 overflow-hidden rounded-2xl border border-gray-200 bg-gray-50 flex items-center justify-center shadow-sm">
+                                {currentExerciseMeta?.imagePath ? (
+                                    <img
+                                        src={`${API_BASE}/uploads/exercises/${currentExerciseMeta.muscle}/${currentExerciseMeta.imagePath}`}
+                                        alt={currentExerciseMeta?.name || "Esercizio"}
+                                        className="h-full w-full object-cover"
                                     />
+                                ) : (
+                                    <Dumbbell className="h-9 w-9 text-gray-400" />
+                                )}
+                            </div>
+
+                            <div className="min-w-0">
+                                <h2 className="text-xl md:text-2xl font-semibold leading-tight truncate">
+                                    {currentExerciseMeta?.name || currentItem?.exerciseId || "Nessun esercizio"}
+                                </h2>
+                                {currentItem && (
+                                    <p className="mt-2 text-xs md:text-sm text-gray-600">
+                                        Schema: {formatScheme(currentItem.scheme)} · Recupero: {currentItem.rest}s
+                                    </p>
+                                )}
+                            </div>
+
+                            <div className="flex items-center gap-1 md:gap-2">
+                                <button
+                                    className={ghostBtn}
+                                    disabled={exIndex === 0}
+                                    onClick={() => setExIndex((i) => Math.max(0, i - 1))}
+                                >
+                                    <ChevronLeft className="h-5 w-5" />
+                                </button>
+                                <span className="px-2 py-1 rounded-full border border-gray-200 bg-white text-sm text-gray-600 tabular-nums whitespace-nowrap">
+                                    {Math.min(exIndex + 1, currentItems.length)} / {currentItems.length}
+                                </span>
+                                <button
+                                    className={ghostBtn}
+                                    disabled={exIndex >= currentItems.length - 1}
+                                    onClick={() => setExIndex((i) => Math.min(currentItems.length - 1, i + 1))}
+                                >
+                                    <ChevronRight className="h-5 w-5" />
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="p-4">
+                            <div className="flex items-start justify-between gap-4 md:gap-6">
+                                {/* NOTE  */}
+                                <div className="flex-1">
+                                    <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2">
+                                        <div className="mb-1 text-[11px] md:text-xs font-medium uppercase tracking-wide text-gray-500">
+                                            Note esercizio
+                                        </div>
+                                        <p className="text-xs md:text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">
+                                            {currentItem?.notes || "—"}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div className="mt-1 text-[10px] text-gray-500">
-                                    {playing ? "Tocca per reset" : "Tocca per avviare"}
+
+                                {/* TIMER  */}
+                                <div className="shrink-0 text-center select-none">
+                                    <div
+                                        role="button"
+                                        className="cursor-pointer inline-block"
+                                        onClick={handleTap}
+                                        title={playing ? "Reset" : "Start"}
+                                    >
+                                        <RestTimer
+                                            seconds={Number(currentItem?.rest ?? 90)}
+                                            playing={playing}
+                                            resetKey={`${currentItem?.uid}-${resetNonce}`} // cambia => reset
+                                            size={80}
+                                            strokeWidth={6}
+                                        />
+                                    </div>
+                                    <div className="mt-1 text-[10px] text-gray-500">
+                                        {playing ? "Tocca per reset" : "Tocca per avviare"}
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
 
 
 
-                    <div ref={sliderRef} className="relative flex w-full snap-x snap-mandatory overflow-x-hidden">
-                        {currentItems.map((item) => {
-                            const meta = exercisesCatalog[item.exerciseId] || {};
-                            const sets = getSets(dayKey, item.exerciseId);
-                            return (
-                                <div key={item.uid} className="w-full shrink-0 snap-center p-4">
-                                    <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-                                        <p className="text-sm text-gray-500">{item.notes || ""}</p>
-                                        <p className="mt-1 text-xs text-gray-500">Schema: {formatScheme(item.scheme)} · Recupero: {item.rest}s</p>
-                                        <div className="mt-4 flex items-center gap-2">
-                                            <button onClick={() => addSet(item.exerciseId)} className={baseBtn}>
-                                                <Plus className="h-4 w-4" /> Aggiungi set
-                                            </button>
-                                            <button onClick={() => removeLastSet(item.exerciseId)} className={baseBtn}>
-                                                <Trash2 className="h-4 w-4" /> Rimuovi ultimo
-                                            </button>
-                                        </div>
+                        <div ref={sliderRef} className="relative flex w-full snap-x snap-mandatory overflow-x-hidden">
+                            {currentItems.map((item) => {
+                                const meta = exercisesCatalog[item.exerciseId] || {};
+                                const sets = getSets(dayKey, item.exerciseId);
+                                return (
+                                    <div key={item.uid} className="w-full shrink-0 snap-center p-4">
+                                        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+                                            <p className="text-sm text-gray-500">{item.notes || ""}</p>
+                                            <p className="mt-1 text-xs text-gray-500">Schema: {formatScheme(item.scheme)} · Recupero: {item.rest}s</p>
+                                            <div className="mt-4 flex items-center gap-2">
+                                                <button onClick={() => addSet(item.exerciseId)} className={baseBtn}>
+                                                    <Plus className="h-4 w-4" /> Aggiungi set
+                                                </button>
+                                                <button onClick={() => removeLastSet(item.exerciseId)} className={baseBtn}>
+                                                    <Trash2 className="h-4 w-4" /> Rimuovi ultimo
+                                                </button>
+                                            </div>
 
-                                        <div className="mt-4 grid grid-cols-1 gap-2">
-                                            {sets.length === 0 && (
-                                                <div className="rounded-lg border border-dashed border-gray-300 p-3 text-sm text-gray-500">Nessun set inserito. Premi "+" per aggiungere.</div>
-                                            )}
+                                            <div className="mt-4 grid grid-cols-1 gap-2">
+                                                {sets.length === 0 && (
+                                                    <div className="rounded-lg border border-dashed border-gray-300 p-3 text-sm text-gray-500">Nessun set inserito. Premi "+" per aggiungere.</div>
+                                                )}
 
-                                            {sets.map((s, i) => (
-                                                <div key={i} className="flex items-center justify-between gap-3 rounded-xl border border-white bg-white p-3">
-                                                    <div className="text-sm font-medium text-gray-700">Set {i + 1}</div>
-                                                    <div className="flex items-center gap-2">
-                                                        <label className="text-sm text-gray-500">Kg</label>
-                                                        <input
-                                                            className={inputClass}
-                                                            inputMode="decimal"
-                                                            value={s.weight}
-                                                            onChange={(e) => updateSet(item.exerciseId, i, "weight", e.target.value)}
-                                                            placeholder="0"
-                                                        />
-                                                        <label className="ml-2 text-sm text-gray-500">Reps</label>
-                                                        <input
-                                                            className={inputClass}
-                                                            inputMode="numeric"
-                                                            value={s.reps}
-                                                            onChange={(e) => updateSet(item.exerciseId, i, "reps", e.target.value)}
-                                                            placeholder="0"
-                                                        />
+                                                {sets.map((s, i) => (
+                                                    <div key={i} className="flex items-center justify-between gap-3 rounded-xl border border-white bg-white p-3">
+                                                        <div className="text-sm font-medium text-gray-700">Set {i + 1}</div>
+                                                        <div className="flex items-center gap-2">
+                                                            <label className="text-sm text-gray-500">Kg</label>
+                                                            <input
+                                                                className={inputClass}
+                                                                inputMode="decimal"
+                                                                value={s.weight}
+                                                                onChange={(e) => updateSet(item.exerciseId, i, "weight", e.target.value)}
+                                                                placeholder="0"
+                                                            />
+                                                            <label className="ml-2 text-sm text-gray-500">Reps</label>
+                                                            <input
+                                                                className={inputClass}
+                                                                inputMode="numeric"
+                                                                value={s.reps}
+                                                                onChange={(e) => updateSet(item.exerciseId, i, "reps", e.target.value)}
+                                                                placeholder="0"
+                                                            />
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            ))}
+                                                ))}
+                                            </div>
                                         </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                ) : (
+                    <div className={`${baseCard} p-4`}>
+                <p className="text-xs font-medium uppercase tracking-wide text-gray-400 mb-3">Esercizi del giorno</p>
+                <div className="flex flex-col gap-2">
+                    {currentItems.length === 0 ? (
+                        <p className="text-sm text-gray-400">Seleziona un giorno per vedere gli esercizi.</p>
+                    ) : (
+                        currentItems.map((item) => {
+                            const meta = exercisesCatalog[item.exerciseId] || {};
+                            return (
+                                <div key={item.uid} className="flex items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2">
+                                    <Dumbbell className="h-4 w-4 text-gray-400 shrink-0" />
+                                    <div className="min-w-0">
+                                        <p className="text-sm font-medium text-gray-800 truncate">{meta.name || item.exerciseId}</p>
+                                        <p className="text-xs text-gray-500">{formatScheme(item.scheme)} · Recupero: {item.rest}s</p>
                                     </div>
                                 </div>
                             );
-                        })}
-                    </div>
+                        })
+                    )}
                 </div>
+            </div>
+            )
+                }
             </div>
         </div>
     );

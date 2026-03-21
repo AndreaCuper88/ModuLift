@@ -13,12 +13,12 @@ export const getWorkoutPlanById = async (planId, token) => {
     }
 };
 
-export const upsertWorkout = async ({token, planId, dayId, entries}) => {
+export const upsertWorkout = async ({token, planId, dayId,sessionId, entries}) => {
     try {
         const url = `cliente/workout/upsert/${planId}/${dayId}`;
         const res = await axios.put(
             url,
-            { entries },
+            { entries, sessionId  },
             {
                 headers: token ? { Authorization: `Bearer ${token}` } : {}
             }
