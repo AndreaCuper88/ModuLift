@@ -230,8 +230,8 @@ export default function ClientMeasurements({setAlert}) {
     }, [id, auth.accessToken]);
 
     const saveAll = async () => {
-        const payload = entries.map((e) => ({ ...e, sex }));
-        console.log("Salva misure:", payload);
+        const payload = entries.map((e) => ({ ...e, sex, heightCm: altezza }));
+        //console.log("Salva misure:", payload);
         try {
             setLoadingSave(true);
             const out = await upsertMisure(payload, auth.accessToken);
@@ -311,9 +311,12 @@ export default function ClientMeasurements({setAlert}) {
                             ) : (
                                 <input
                                     type="number"
+                                    step="1"
+                                    min="0"
                                     value={altezza ?? ''}
-                                    readOnly
-                                    className="w-20 rounded-md bg-gray-100 px-2 py-1 text-sm text-gray-900 outline-none cursor-not-allowed"
+                                    onChange={(e) => setAltezza(e.target.value ? parseInt(e.target.value, 10) : null)}
+                                    onKeyDown={(e) => ['.',',','e','E','+','-'].includes(e.key) && e.preventDefault()}
+                                    className="w-20 rounded-md bg-gray-100 px-2 py-1 text-sm text-gray-900 outline-none"
                                 />
                             )}
                         </div>

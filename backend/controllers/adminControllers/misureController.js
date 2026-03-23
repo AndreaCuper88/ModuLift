@@ -1,4 +1,5 @@
 const MisuraPliche = require('../../models/misureModel');
+const Utente = require('../../models/userModel');
 
 
 
@@ -54,6 +55,13 @@ exports.upsertMisure = async (req, res) => {
                 await doc.save(); // ricalcola derived/isComplete
                 results.push({ measuredAt: when, action: 'updated', id: doc._id });
             }
+        }
+        //Aggiornamento altezza
+        const altezza = items[0]?.heightCm;
+        const uidForHeight = items[0]?.user || items[0]?.userId;
+        //console.log('Aggiorno altezza:', altezza, 'per utente:', uidForHeight);
+        if (altezza !== undefined && altezza !== null && uidForHeight) {
+            await Utente.findByIdAndUpdate(uidForHeight, { altezza });
         }
 
         return res.status(200).json({
