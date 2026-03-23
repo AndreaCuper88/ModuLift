@@ -225,6 +225,35 @@ export default function Navbar({ setAlert }) {
 
                                     )
                                 )}
+                                {auth.user?.ruolo === 'cliente' && (
+                                    loadedPlan ? (
+                                        <Link
+                                            to={{
+                                                pathname: "/cliente/misure",
+                                            }}
+                                            className="rounded-md px-3 py-2 text-base font-medium text-black hover:text-gray-700"
+                                        >
+                                            Misure
+                                        </Link>
+                                    ) : (
+                                        <span className="relative group rounded-md px-3 py-2 text-base font-medium text-gray-400 cursor-not-allowed">
+                                            Misure
+
+                                            {/* TOOLTIP */}
+                                            <span className="
+                                                absolute left-1/2 -translate-x-1/2 top-[110%]
+                                                bg-gray-800 text-white text-xs px-2 py-1 rounded
+                                                opacity-0 group-hover:opacity-100
+                                                transition-opacity duration-200
+                                                pointer-events-none
+                                                whitespace-nowrap
+                                                z-50
+                                            ">
+                                                Nessun piano disponibile al momento
+                                            </span>
+                                         </span>
+                                    )
+                                )}
                             </div>
                         </div>
                     </div>
@@ -271,35 +300,73 @@ export default function Navbar({ setAlert }) {
             </div>
 
             {isOpen && (
-                <div className="sm:hidden" id="mobile-menu">
-                    <div className="sm:hidden bg-light px-4 pt-4 pb-6" id="mobile-menu">
-                        <div className="space-y-3">
-                            <a
-                                href="#"
-                                className="block rounded-md text-base font-semibold text-black hover:bg-gray-200 px-3 py-2"
-                                aria-current="page"
+                <div className="sm:hidden bg-light px-4 pt-4 pb-6" id="mobile-menu">
+                    <div className="space-y-3">
+                        <Link
+                            to="/dashboard"
+                            className="block rounded-md px-3 py-2 text-base font-medium text-black hover:bg-gray-200"
+                            onClick={() => setIsOpen(false)}
+                        >
+                            Dashboard
+                        </Link>
+
+                        {auth.user?.ruolo === 'admin' && (
+                            <Link
+                                to="/admin/clienti"
+                                className="block rounded-md px-3 py-2 text-base font-medium text-black hover:bg-gray-200"
+                                onClick={() => setIsOpen(false)}
                             >
-                                Dashboard
-                            </a>
-                            <a
-                                href="#"
-                                className="block rounded-md text-base font-medium text-black hover:bg-gray-200 px-3 py-2"
-                            >
-                                Team
-                            </a>
-                            <a
-                                href="#"
-                                className="block rounded-md text-base font-medium text-black hover:bg-gray-200 px-3 py-2"
-                            >
-                                Projects
-                            </a>
-                            <a
-                                href="#"
-                                className="block rounded-md text-base font-medium text-black hover:bg-gray-200 px-3 py-2"
-                            >
-                                Calendar
-                            </a>
-                        </div>
+                                Clienti
+                            </Link>
+                        )}
+
+                        {auth.user?.ruolo === 'cliente' && (
+                            loadedPlan ? (
+                                <Link
+                                    to={{ pathname: "/cliente/allenamento", search: createSearchParams({ planId: plan.planId }).toString() }}
+                                    className="block rounded-md px-3 py-2 text-base font-medium text-black hover:bg-gray-200"
+                                    onClick={() => setIsOpen(false)}
+                                >
+                                    Allenamento
+                                </Link>
+                            ) : (
+                                <span className="block rounded-md px-3 py-2 text-base font-medium text-gray-400 cursor-not-allowed">
+                    Allenamento
+                </span>
+                            )
+                        )}
+
+                        {auth.user?.ruolo === 'cliente' && (
+                            loadedPlan ? (
+                                <Link
+                                    to="/cliente/pianoalimentare"
+                                    className="block rounded-md px-3 py-2 text-base font-medium text-black hover:bg-gray-200"
+                                    onClick={() => setIsOpen(false)}
+                                >
+                                    Piano Alimentare
+                                </Link>
+                            ) : (
+                                <span className="block rounded-md px-3 py-2 text-base font-medium text-gray-400 cursor-not-allowed">
+                    Piano Alimentare
+                </span>
+                            )
+                        )}
+
+                        {auth.user?.ruolo === 'cliente' && (
+                            loadedPlan ? (
+                                <Link
+                                    to="/cliente/misure"
+                                    className="block rounded-md px-3 py-2 text-base font-medium text-black hover:bg-gray-200"
+                                    onClick={() => setIsOpen(false)}
+                                >
+                                    Misure
+                                </Link>
+                            ) : (
+                                <span className="block rounded-md px-3 py-2 text-base font-medium text-gray-400 cursor-not-allowed">
+                    Misure
+                </span>
+                            )
+                        )}
                     </div>
                 </div>
             )}

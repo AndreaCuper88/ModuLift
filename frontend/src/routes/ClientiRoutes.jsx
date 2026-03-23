@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import DashboardCliente from "../pages/clientiPges/Dashboard";
 import Allenamento from "../pages/clientiPges/Allenamento";
 import PianoAlimentare from "../pages/clientiPges/PianoAlimentare";
+import Misure from "../pages/clientiPges/Misure";
 
 export default function ClienteRoutes({setAlert}) {
     return (
@@ -9,6 +10,7 @@ export default function ClienteRoutes({setAlert}) {
             <Route path="/cliente/dashboard" element={<DashboardCliente />} />
             <Route path="/cliente/allenamento" element={<Allenamento setAlert={setAlert}/>} />
             <Route path="/cliente/pianoalimentare" element={<PianoAlimentare setAlert={setAlert}/>} />
+            <Route path="/cliente/misure" element={<Misure setAlert={setAlert}/>} />
         </Routes>
     );
 }

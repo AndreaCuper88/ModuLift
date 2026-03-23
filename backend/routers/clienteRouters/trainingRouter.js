@@ -9,6 +9,8 @@ router.get('/plan/:planId', training.getWorkoutPlanFull);
 
 router.put('/upsert/:planId/:dayId', training.upsertDayEntries);
 
+router.get('/last-workout', training.getLastWorkout);
+
 //router.get("/:planId/todayLogs", training.getTodayLogs);
 
 

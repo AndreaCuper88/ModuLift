@@ -22,6 +22,7 @@ const uploadsRouter = require('./routers/uploadsRouter');
 const utilsRouter = require('./routers/clienteRouters/utilsRouter');
 const trainingRouter = require('./routers/clienteRouters/trainingRouter');
 const pianoUserAlimentareRouter = require('./routers/clienteRouters/pianoAlimentareRouter');
+const misureClienteRouter = require('./routers/clienteRouters/misureRouter');
 
 //Import middlewares
 const verifyToken = require('./middlewares/verifyToken');
@@ -57,6 +58,7 @@ app.use('/api/cliente', requireRoles('cliente'));
 app.use('/api/cliente/utils', utilsRouter);
 app.use('/api/cliente/workout',trainingRouter);
 app.use('/api/cliente/pianoAlimentare',pianoUserAlimentareRouter);
+app.use('/api/cliente/misure', misureClienteRouter);
 
 app.listen(PORT, () => {
     console.log(`Server avviato su http://localhost:${PORT}`);

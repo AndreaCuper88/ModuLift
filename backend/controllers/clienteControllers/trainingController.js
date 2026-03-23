@@ -75,3 +75,59 @@ exports.upsertDayEntries = async (req, res) => {
         return res.status(500).json({ error: 'Errore salvataggio giorno', details: err.message });
     }
 };
+
+exports.getLastWorkout = async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        const last = await WorkoutProgress.findOne({ userId })
+            .sort({ updatedAt: -1 })
+            .lean();
+
+        if (!last) {
+            return res.status(200).json(null);
+        }
+
+        const giorniRaw = last.days instanceof Map
+            ? Object.fromEntries(last.days)
+            : (last.days || {});
+
+        const ids = [];
+        Object.values(giorniRaw).forEach(voci => {
+            voci.forEach(v => ids.push(v.exerciseId));
+        });
+
+        const esercizi = await Esercizio.find({ _id: { $in: ids } })
+            .select("name")
+            .lean();
+
+        const mappaEsercizi = {};
+        esercizi.forEach(e => {
+            mappaEsercizi[e._id.toString()] = e.name;
+        });
+
+        const arrayGiorni = Object.entries(giorniRaw)
+            .sort(([a], [b]) => {
+                const n1 = parseInt(a.replace(/\D/g, ""));
+                const n2 = parseInt(b.replace(/\D/g, ""));
+                return n1 - n2;
+            })
+            .map(([chiaveGiorno, voci]) => ({
+                giorno: `Giorno ${chiaveGiorno.replace(/\D/g, "")}`,
+                esercizi: voci.map(v => ({
+                    nome: mappaEsercizi[v.exerciseId?.toString()] || "Esercizio",
+                    serie: v.sets
+                }))
+            }));
+
+        res.status(200).json({
+            planId: last.planId,
+            data: last.updatedAt,
+            giorni: arrayGiorni
+        });
+
+    } catch (err) {
+        console.error("Errore getLastWorkout:", err.message, err.stack);
+        res.status(500).json({ message: "Errore server", dettaglio: err.message });
+    }
+};
