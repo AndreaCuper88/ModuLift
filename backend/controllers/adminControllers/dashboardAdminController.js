@@ -1,5 +1,6 @@
 const Utente = require('../../models/userModel');
 const WorkoutPlan = require('../../models/planModel');
+const PianoAlimentare = require('../../models/pianoAlimentareModel');
 
 exports.getCountPiani = async (req, res) => {
     try {
@@ -70,3 +71,23 @@ exports.getActiveUsers = async (req, res) => {
         console.error("Errore durante il caricamento degli utenti attivi:", e);
     }
 }
+
+exports.getCountSchede = async (req, res) => {
+    try {
+        const count = await WorkoutPlan.countDocuments();
+        res.status(200).json(count);
+    } catch (e) {
+        console.error("Errore durante il conteggio delle schede:", e);
+        res.status(500).json({ message: "Errore interno del server" });
+    }
+};
+
+exports.getCountPianiAlimentari = async (req, res) => {
+    try {
+        const count = await PianoAlimentare.countDocuments();
+        res.status(200).json(count);
+    } catch (e) {
+        console.error("Errore durante il conteggio dei piani alimentari:", e);
+        res.status(500).json({ message: "Errore interno del server" });
+    }
+};

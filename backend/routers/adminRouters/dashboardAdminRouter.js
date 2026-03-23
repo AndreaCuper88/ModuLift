@@ -16,4 +16,16 @@ router.get(
     dashboardController.getCountPiani
 );
 
+// [GET] /api/admin/dashboard/getCountSchede → Conta tutte le schede di allenamento (solo admin)
+router.get(
+    '/getCountSchede',
+    dashboardController.getCountSchede
+);
+
+// [GET] /api/admin/dashboard/getCountPianiAlimentari → Conta tutti i piani alimentari (solo admin)
+router.get(
+    '/getCountPianiAlimentari',
+    dashboardController.getCountPianiAlimentari
+);
+
 module.exports = router;

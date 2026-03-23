@@ -90,88 +90,108 @@ export default function GestioneClienti() {
     );
 
     return (
-        <div className="p-6 max-w-6xl mx-auto">
-            <h1 className="text-4xl font-bold mb-8 text-center text-gray-800 dark:text-black">Gestione Clienti</h1>
+        <div className="min-h-screen w-full bg-gradient-to-b from-white via-amber-50 to-white text-gray-900">
+            <div className="mx-auto max-w-6xl px-4 py-8">
 
-            {/* Barra di ricerca */}
-            <div className="mb-8 sticky top-4 bg-transparent z-10">
-                <input
-                    type="text"
-                    placeholder="🔍 Cerca per nome o email..."
-                    className="w-full px-5 py-3 rounded-xl border border-gray-300 dark:border-gray-600
-                   focus:outline-none focus:ring-2 focus:ring-blue-500
-                   bg-white dark:bg-gray-900 text-gray-800 dark:text-white shadow-sm"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                />
-            </div>
+                {/* Header */}
+                <div className="mb-8">
+                    <h1 className="text-2xl font-semibold md:text-3xl">Gestione Clienti</h1>
+                    <p className="text-sm text-gray-500 mt-1">Visualizza e gestisci i clienti registrati</p>
+                </div>
 
+                {/* Barra di ricerca */}
+                <div className="mb-6 sticky top-4 z-10">
+                    <input
+                        type="text"
+                        placeholder="🔍 Cerca per nome o email..."
+                        className="w-full px-5 py-3 rounded-2xl border border-gray-300 bg-white text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
 
-
-            {/* Lista clienti */}
-            <div className="space-y-6">
-                {clientiFiltrati.length > 0 ? (
-                    clientiFiltrati.map(cliente => (
-                        <div
-                            key={cliente._id}
-                            className="flex flex-col sm:flex-row sm:items-center justify-between bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-6 rounded-2xl shadow-md hover:shadow-lg transition duration-200"
-                        >
-                            <div className="flex items-center gap-5 mb-4 sm:mb-0">
-                                    {cliente.avatarPath ? (
-                                        <img src={`${process.env.REACT_APP_API_BASE_URL}/uploads/avatars/${cliente.avatarPath}`} alt="User" className="w-12 h-12 rounded-full object-cover" />
-                                    ) : (
-                                        <div className="bg-blue-100 dark:bg-blue-900 p-3 rounded-full">
-                                            <FaUser className="text-2xl text-blue-600 dark:text-blue-400" />
-                                        </div>
-                                    )}
-                                <div>
-                                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{cliente.nome}</h2>
-                                    <p className="text-sm text-gray-600 dark:text-gray-300">{cliente.email}</p>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                        Registrato il {new Date(cliente.dataRegistrazione).toLocaleDateString('it-IT', {
-                                        day: '2-digit',
-                                        month: '2-digit',
-                                        year: 'numeric'
-                                    })}
-                                    </p>
-
+                {/* Lista clienti */}
+                <div className="space-y-4">
+                    {loading ? (
+                        [...Array(3)].map((_, i) => (
+                            <div key={i} className="rounded-2xl border border-gray-300 bg-white p-6 animate-pulse">
+                                <div className="flex items-center gap-5">
+                                    <div className="w-12 h-12 rounded-full bg-gray-200" />
+                                    <div className="space-y-2">
+                                        <div className="h-4 w-32 rounded bg-gray-200" />
+                                        <div className="h-3 w-48 rounded bg-gray-200" />
+                                    </div>
                                 </div>
                             </div>
+                        ))
+                    ) : clientiFiltrati.length > 0 ? (
+                        clientiFiltrati.map(cliente => (
+                            <div
+                                key={cliente._id}
+                                className="flex flex-col sm:flex-row sm:items-center justify-between rounded-2xl border border-gray-300 bg-white p-5 hover:shadow-md transition duration-200"
+                            >
+                                <div className="flex items-center gap-5 mb-4 sm:mb-0">
+                                    {cliente.avatarPath ? (
+                                        <img
+                                            src={`${process.env.REACT_APP_API_BASE_URL}/uploads/avatars/${cliente.avatarPath}`}
+                                            alt="User"
+                                            className="w-12 h-12 rounded-full object-cover"
+                                        />
+                                    ) : (
+                                        <div className="bg-blue-50 p-3 rounded-full">
+                                            <FaUser className="text-xl text-blue-500" />
+                                        </div>
+                                    )}
+                                    <div>
+                                        <h2 className="text-base font-semibold text-gray-900">{cliente.nome}</h2>
+                                        <p className="text-sm text-gray-500">{cliente.email}</p>
+                                        <p className="text-xs text-gray-400 mt-0.5">
+                                            Registrato il {new Date(cliente.dataRegistrazione).toLocaleDateString('it-IT', {
+                                            day: '2-digit',
+                                            month: '2-digit',
+                                            year: 'numeric'
+                                        })}
+                                        </p>
+                                    </div>
+                                </div>
 
-                            <div className="flex gap-2 flex-wrap justify-end">
-                                <button
-                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                                    onClick={() => navigate(`/admin/scheda/${cliente._id}`)}
-                                >
-                                    Scheda
-                                </button>
-                                <button
-                                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
-                                    onClick={() => navigate(`/admin/misure/${cliente._id}`)}
-                                >
-                                    Misure
-                                </button>
-                                <button
-                                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
-                                    onClick={() => navigate(`/admin/piano/${cliente._id}`)}
-                                >
-                                    Piano alimentare
-                                </button>
-                                <button
-                                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition flex items-center gap-1 disabled:opacity-60"
-                                    onClick={() => openModal(cliente)}
-                                    disabled={loadingAction && selectedCliente?._id === cliente._id}
-                                >
-                                    <FaTrash className="text-sm" />
-                                    {(loadingAction && selectedCliente?._id === cliente._id) ? "In corso…" : "Elimina"}
-                                </button>
+                                <div className="flex gap-2 flex-wrap justify-end">
+                                    <button
+                                        className="px-4 py-2 rounded-2xl text-sm font-medium bg-blue-50 text-blue-600 hover:bg-blue-100 transition"
+                                        onClick={() => navigate(`/admin/scheda/${cliente._id}`)}
+                                    >
+                                        Scheda
+                                    </button>
+                                    <button
+                                        className="px-4 py-2 rounded-2xl text-sm font-medium bg-purple-50 text-purple-600 hover:bg-purple-100 transition"
+                                        onClick={() => navigate(`/admin/misure/${cliente._id}`)}
+                                    >
+                                        Misure
+                                    </button>
+                                    <button
+                                        className="px-4 py-2 rounded-2xl text-sm font-medium bg-green-50 text-green-600 hover:bg-green-100 transition"
+                                        onClick={() => navigate(`/admin/piano/${cliente._id}`)}
+                                    >
+                                        Piano alimentare
+                                    </button>
+                                    <button
+                                        className="px-4 py-2 rounded-2xl text-sm font-medium bg-rose-50 text-rose-500 hover:bg-rose-100 transition flex items-center gap-1 disabled:opacity-60"
+                                        onClick={() => openModal(cliente)}
+                                        disabled={loadingAction && selectedCliente?._id === cliente._id}
+                                    >
+                                        <FaTrash className="text-xs" />
+                                        {(loadingAction && selectedCliente?._id === cliente._id) ? "In corso…" : "Elimina"}
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    ))
-                ) : (
-                    <p className="text-center text-gray-500 dark:text-gray-400">Nessun cliente trovato.</p>
-                )}
+                        ))
+                    ) : (
+                        <p className="text-center text-gray-400 py-12">Nessun cliente trovato.</p>
+                    )}
+                </div>
+
             </div>
+
             {/* Modale azioni */}
             <ClienteActionModal
                 open={isModalOpen}
