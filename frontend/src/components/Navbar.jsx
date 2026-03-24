@@ -6,10 +6,20 @@ import useAuth from "../hooks/useAuth";
 import UserMenu from "../components/UserMenu";
 import {getMyLatestPiano} from "../api/clienteApi/utilsApi";
 import {createSearchParams} from "react-router-dom";
+import { getProfilo } from "../api/userApi";
 
 
 export default function Navbar({ setAlert }) {
     const { auth } = useAuth();
+
+    const [avatarPath, setAvatarPath] = useState(null); //Percorso avatar da mostrare
+
+    useEffect(() => {
+        if (!auth.user?.id) return;
+        getProfilo(auth.user.id)
+            .then(data => setAvatarPath(data.avatarPath ?? null))
+            .catch(() => {});
+    }, [auth.user?.id]);
 
     const [isOpen, setIsOpen] = useState(false);
 
@@ -293,7 +303,7 @@ export default function Navbar({ setAlert }) {
                         </button>
 
                         <div className="relative ml-3">
-                            {auth.user ? <UserMenu setAlert={setAlert} /> : <LoginDropdown setAlert={setAlert} />}
+                            {auth.user ? <UserMenu setAlert={setAlert} avatarPath={avatarPath} /> : <LoginDropdown setAlert={setAlert} />}
                         </div>
                     </div>
                 </div>

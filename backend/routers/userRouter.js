@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const verifyToken = require('../middlewares/verifyToken');
 
 //Import del controller di user
 const userController = require('../controllers/userController');
@@ -28,6 +29,8 @@ router.get('/:userId/getSex', userController.getSex);
 //Rotta per ottenere l'altezza dell'utente
 router.get('/:userId/getHeight', userController.getHeight);
 
+//Rotta per ottenere il profilo dell'utente
+router.get('/:userId/profilo', verifyToken, userController.getProfilo);
 
 
  module.exports = router;

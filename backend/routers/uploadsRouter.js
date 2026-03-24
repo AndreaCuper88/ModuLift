@@ -29,4 +29,26 @@ router.post(
     uploadsController.uploadExerciseImage
 );
 
+
+const storageAvatar = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, path.join(__dirname, `../uploads/avatars`));
+    },
+    filename: (req, file, cb) => {
+        // Nomino il file con l'id utente per sovrascrivere il vecchio avatar
+        const ext = path.extname(file.originalname);
+        cb(null, `${req.user.id}${ext}`);
+    }
+});
+
+const uploadAvatar = multer({ storage: storageAvatar });
+
+// [POST] /api/uploads/uploadAvatar → Upload avatar utente loggato
+router.post(
+    '/uploadAvatar',
+    verifyToken,
+    uploadAvatar.single('avatar'),
+    uploadsController.uploadAvatar
+);
+
 module.exports = router;

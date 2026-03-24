@@ -194,3 +194,32 @@ exports.getHeight = async (req, res) => {
         return res.status(500).json({ message: 'Errore recupero altezza utente', error: err?.message });
     }
 };
+
+exports.getProfilo = async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        const user = await Utente.findById(userId).select(
+            'username email ruolo nome cognome dataNascita sesso altezza attivo dataRegistrazione avatarPath'
+        );
+
+        if (!user) return res.status(404).json({ message: 'Utente non trovato' });
+
+        return res.status(200).json({
+            id:                user._id,
+            username:          user.username,
+            email:             user.email,
+            ruolo:             user.ruolo,
+            nome:              user.nome,
+            cognome:           user.cognome,
+            dataNascita:       user.dataNascita,
+            sesso:             user.sesso,
+            altezza:           user.altezza,
+            attivo:            user.attivo,
+            dataRegistrazione: user.dataRegistrazione,
+            avatarPath:        user.avatarPath,
+        });
+    } catch (err) {
+        return res.status(500).json({ message: 'Errore recupero profilo', error: err?.message });
+    }
+};
