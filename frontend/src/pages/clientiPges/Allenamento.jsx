@@ -32,12 +32,13 @@ export default function WorkoutPage({setAlert}) {
         const handleOnline = () => setIsOnline(true);
         const handleOffline = () => setIsOnline(false);
 
-        window.addEventListener("online", handleOnline);
+        window.addEventListener("online", handleOnline); // "quando window emette 'online', esegui handleOnline"
         window.addEventListener("offline", handleOffline);
 
         return () => {
             window.removeEventListener("online", handleOnline);
             window.removeEventListener("offline", handleOffline);
+            // Rimuovo i listner quando viene smontato il componente
         };
     }, []);
 
@@ -68,16 +69,16 @@ export default function WorkoutPage({setAlert}) {
     const ghostBtn = "inline-flex items-center justify-center rounded-xl p-2 hover:bg-gray-100 text-gray-600";
     const inputClass = "w-20 rounded-lg bg-gray-100 px-3 py-2 text-sm outline-none";
 
-    const loadingRef = useRef(false);
+    const loadingRef = useRef(false); //Flag senza causare re-render di Workout Page
 
     const loadPlan = useCallback(async () => {
-        if (loadingRef.current) return; // ← evita chiamate doppie
-        loadingRef.current = true;
+        if (loadingRef.current) return; // evita chiamate doppie
+        loadingRef.current = true;  //Setto true
 
         const cacheKey = `plan_${planId}`;
         const cached = localStorage.getItem(cacheKey);
 
-        if (cached) {
+        if (cached) {       //Se ho dati offline inizio a mostrarli
             try {
                 const parsed = JSON.parse(cached);
                 setPlan(parsed.plan);
@@ -88,7 +89,7 @@ export default function WorkoutPage({setAlert}) {
         if (!navigator.onLine) {
             console.log("offline → uso cache");
 
-            if (!cached) {
+            if (!cached) {  //Se non ho dati memorizzati dai errore
                 setPlan(null);
                 setAlert({
                     message: "Sei offline e non hai dati in cache.",
@@ -100,7 +101,7 @@ export default function WorkoutPage({setAlert}) {
             return;
         }
 
-        try {
+        try {   //Effettuo chiamata se online
             setLoading(true);
             const data = await getWorkoutPlanById(planId, auth.accessToken);
             setPlan(data.plan);
@@ -148,7 +149,7 @@ export default function WorkoutPage({setAlert}) {
     }
 
     async function saveLogs() {
-        const payload = {
+        const payload = {   //Costruzione payload
             planId: planId,
             dayId: dayKey,
             sessionId: currentSessionId,
@@ -165,13 +166,13 @@ export default function WorkoutPage({setAlert}) {
         };
 
         //Salvo sempre in coda
-        const queueId = await db.syncQueue.add({
+        const queueId = await db.syncQueue.add({    //Salvo in idexdb, in coda
             tipo: "workoutProgress",
             operazione: "update",
             payload,
             timestamp: Date.now()
         });
-        await db.workoutProgress.put({
+        await db.workoutProgress.put({  //Salvo localmente in indexdb dentro WorkoutProgress per ripristinare i log se chiudo l'app o aggiorno nel mentre
             planId,
             sessionId: currentSessionId,
             dayKey,
@@ -208,11 +209,11 @@ export default function WorkoutPage({setAlert}) {
             hasLoadedLogs.current = true;
 
             isLoadingLogs.current = true;
-            const saved = await db.workoutProgress
+            const saved = await db.workoutProgress //Prendo l'ultimo record salvato
                 .where("planId")
                 .equals(planId)
                 .last();
-            if (saved?.logs) {
+            if (saved?.logs) {  //Ripristino tutto a seguito di un reload
                 setLogs(saved.logs);
                 setCurrentSessionId(saved.sessionId);
                 setSessionActive(true);
@@ -236,8 +237,8 @@ export default function WorkoutPage({setAlert}) {
     }
 
     async function endSession() {
-        await saveLogs();
-        await db.workoutProgress
+        await saveLogs(); //Salvo e provo a sincronizzare con db
+        await db.workoutProgress    //Elimino la copia locale per il ripristino dei dati in caso di reload
             .where("[planId+sessionId]")
             .equals([planId, currentSessionId])
             .delete();
@@ -306,12 +307,12 @@ export default function WorkoutPage({setAlert}) {
             const all = await db.syncQueue
                 .where("tipo")
                 .equals("workoutProgress")
-                .toArray();
-            if (!all.length) return;
+                .toArray(); //Prendo tutti i record in coda
+            if (!all.length) return; //Se la coda è vuota mi fermo
 
             for (const item of all) {
                 try {
-                    await upsertWorkout({
+                    await upsertWorkout({ // manda al server
                         token: auth.accessToken,
                         planId: item.payload.planId,
                         dayId: item.payload.dayId,
@@ -324,7 +325,7 @@ export default function WorkoutPage({setAlert}) {
 
                 } catch (e) {
                     console.error("Errore sync log:", e);
-                    // lo lascio in queue → retry futuro
+                    // lo lascio in queue , retry futuro
                 }
             }
 
@@ -338,12 +339,12 @@ export default function WorkoutPage({setAlert}) {
             }
         }
 
-        window.addEventListener("online", trySync);
+        window.addEventListener("online", trySync); //Ascolto il ritorno online
 
         // sync immediato se già online
         trySync();
 
-        return () => window.removeEventListener("online", trySync);
+        return () => window.removeEventListener("online", trySync); //cleanup
     }, [auth.accessToken, isOnline]);
 
 
