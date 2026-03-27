@@ -4,6 +4,7 @@ import { useParams } from "react-router-dom";
 import useAuth from "../../hooks/useAuth";
 import UserCard from "../../components/UserCard";
 import { getLatestPiano } from "../../api/clienteApi/pianoalimentareApi";
+import { downloadPianoAlimentarePdf } from "../../api/clienteApi/pdfApi";
 
 // ------------------------------------------------------
 // ModuLift – Visualizzazione Piano Alimentare
@@ -45,6 +46,25 @@ export default function PianoAlimentare({ setAlert }) {
         loadPlan();
     }, [id]);
 
+    const [loadingPdf, setLoadingPdf] = useState(false);
+
+    async function handleDownloadPdf() {
+        try {
+            setLoadingPdf(true);
+            const blob = await downloadPianoAlimentarePdf(auth.accessToken, plan);
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "piano-alimentare.pdf";
+            a.click();
+            URL.revokeObjectURL(url);
+        } catch (e) {
+            setAlert({ message: "Errore generazione PDF", type: "danger" });
+        } finally {
+            setLoadingPdf(false);
+        }
+    }
+
     const baseCard =
         "rounded-2xl border border-gray-300 bg-white text-gray-900 shadow-sm";
 
@@ -66,10 +86,23 @@ export default function PianoAlimentare({ setAlert }) {
                         Piano Alimentare
                     </h1>
 
-                    <button onClick={loadPlan} className={baseBtn}>
-                        <RefreshCw className="h-4 w-4" />
-                        {loading ? "Aggiorno..." : "Aggiorna"}
-                    </button>
+                    <div className="flex items-center gap-2">
+                        {plan && (
+                            <button
+                                onClick={handleDownloadPdf}
+                                disabled={loadingPdf}
+                                className={baseBtn}
+                            >
+                                🖨️ {loadingPdf ? "Generando..." : "Scarica PDF"}
+                            </button>
+                        )}
+
+                        <button onClick={loadPlan} className={baseBtn}>
+                            <RefreshCw className="h-4 w-4" />
+                            {loading ? "Aggiorno..." : "Aggiorna"}
+                        </button>
+
+                    </div>
                 </div>
 
                 {loading || !plan ? (
